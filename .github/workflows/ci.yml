@@ -21,4 +21,6 @@ jobs:
         run: python -m compileall scripts hexstrike
       - name: Validate lock files and adapter layout
         shell: bash
-        run: python tests/test_repository.py
+        run: |
+          python tests/test_repository.py
+          python tests/test_normalization.py

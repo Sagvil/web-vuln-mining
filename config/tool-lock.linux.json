@@ -3,7 +3,7 @@
   "platform": "linux-amd64",
   "generated_at": "2026-07-26",
   "tools": {
-    "codeql": {"version": "2.26.1", "kind": "archive", "asset": "codeql-bundle-linux64.tar.gz", "checksum_url": "https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.26.1/codeql-bundle-linux64.tar.gz.sha256", "executable": "bin/codeql/codeql"},
+    "codeql": {"version": "2.26.1", "kind": "archive", "url": "https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.26.1/codeql-bundle-linux64.tar.gz", "sha256": "38eca75ea296a6c48c52aff942b0678f06d3367140a5aa18caf80176943422ba", "executable": "bin/codeql/codeql"},
     "trivy": {"version": "0.72.0", "kind": "archive", "asset": "trivy_0.72.0_Linux-64bit.tar.gz", "checksum_url": "https://github.com/aquasecurity/trivy/releases/download/v0.72.0/trivy_0.72.0_checksums.txt", "executable": "bin/trivy"},
     "gitleaks": {"version": "8.30.1", "kind": "archive", "asset": "gitleaks_8.30.1_linux_x64.tar.gz", "checksum_url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_checksums.txt", "executable": "bin/gitleaks"},
     "nuclei": {"version": "3.11.0", "kind": "archive", "asset": "nuclei_3.11.0_linux_amd64.zip", "checksum_url": "https://github.com/projectdiscovery/nuclei/releases/download/v3.11.0/nuclei_3.11.0_checksums.txt", "executable": "bin/nuclei"},
@@ -11,6 +11,9 @@
     "katana": {"version": "1.6.1", "kind": "archive", "asset": "katana_1.6.1_linux_amd64.zip", "checksum_url": "https://github.com/projectdiscovery/katana/releases/download/v1.6.1/katana-1.6.1-checksums.txt", "executable": "bin/katana"},
     "zap": {"version": "2.17.0", "kind": "archive", "executable": "bin/zap/zap.sh"},
     "semgrep": {"version": "1.171.0", "kind": "python-package", "executable": "bin/python-tools/bin/semgrep"},
-    "schemathesis": {"version": "4.24.3", "kind": "uvx", "executable": "uvx schemathesis"}
+    "schemathesis": {"version": "4.24.3", "kind": "uvx", "executable": "uvx schemathesis"},
+    "dalfox": {"version": "3.1.2", "kind": "archive", "url": "https://github.com/hahwul/dalfox/releases/download/v3.1.2/dalfox-v3.1.2-linux-x86_64.tar.gz", "sha256": "ef48d30c183cead88eb89da10bdc1a7fa58a484d175319096075b470f3652fd4", "executable": "bin/dalfox"},
+    "ffuf": {"version": "2.2.1", "kind": "archive", "url": "https://github.com/ffuf/ffuf/releases/download/v2.2.1/ffuf_2.2.1_linux_amd64.tar.gz", "sha256": "86307885810d3c36ba4a3e9ba5178c2d9027bba0dd7f4ea39e39e7c972b62396", "executable": "bin/ffuf"},
+    "sqlmap": {"version": "1.10", "kind": "archive", "url": "https://codeload.github.com/sqlmapproject/sqlmap/zip/refs/tags/1.10", "sha256": "97b8fe8e06ed8b6c75c234f111393bae79e2c3d3283c086351354716277dfff1", "executable": "bin/sqlmap/sqlmap_entry.zlib"}
   }
 }

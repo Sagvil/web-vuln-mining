@@ -15,3 +15,9 @@ profiles:
     tools: [pd-httpx, katana, nuclei, zap-passive]
   api:
     tools: [schemathesis, zap-api-passive]
+  verify-xss:
+    tools: [dalfox]
+  verify-sqli:
+    tools: [sqlmap]
+  content-discovery:
+    tools: [ffuf]

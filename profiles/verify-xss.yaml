@@ -1,0 +1,5 @@
+# Dalfox validates only explicit in-scope candidate URLs supplied with --input.
+name: verify-xss
+tools: [dalfox]
+requires: [candidate-file]
+max_targets: 20

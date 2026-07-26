@@ -11,6 +11,9 @@
     "katana": {"version": "1.6.1", "kind": "archive", "sha256": "50e11bda86faa3f7013e2f2764ff75dafd220a3425f0a509c248432e4dcf8dd7", "executable": "bin/katana.exe"},
     "zap": {"version": "2.17.0", "kind": "archive", "sha256": "94c8f767b1c2e94f0db66b3ae56514d5e3f5a728ee1b6c798e0c8fe2d61fbff0", "executable": "bin/zap/zap.bat"},
     "semgrep": {"version": "1.171.0", "kind": "python-package", "executable": "bin/python-tools/Scripts/semgrep.exe"},
-    "schemathesis": {"version": "4.24.3", "kind": "uvx", "executable": "uvx schemathesis"}
+    "schemathesis": {"version": "4.24.3", "kind": "uvx", "executable": "uvx schemathesis"},
+    "dalfox": {"version": "3.1.2", "kind": "archive", "url": "https://github.com/hahwul/dalfox/releases/download/v3.1.2/dalfox-v3.1.2-windows-x86_64.zip", "sha256": "9aac0bb85fec8710ba23f1df96de34217931dee81693503ebcf61150c4368300", "executable": "bin/dalfox.exe"},
+    "ffuf": {"version": "2.2.1", "kind": "archive", "url": "https://github.com/ffuf/ffuf/releases/download/v2.2.1/ffuf_2.2.1_windows_amd64.zip", "sha256": "717e3d103ee36ce743a18605be66a4424fca27758eebed1e8ebb2eb0a3645589", "executable": "bin/ffuf.exe"},
+    "sqlmap": {"version": "1.10", "kind": "archive", "url": "https://codeload.github.com/sqlmapproject/sqlmap/zip/refs/tags/1.10", "sha256": "97b8fe8e06ed8b6c75c234f111393bae79e2c3d3283c086351354716277dfff1", "executable": "bin/sqlmap/sqlmap_entry.zlib"}
   }
 }

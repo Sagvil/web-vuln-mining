@@ -10,4 +10,4 @@ metadata:
       env: [WEB_VULN_MINING_ROOT]
 ---
 # Web Vulnerability Mining
-Run `python $WEB_VULN_MINING_ROOT/scripts/preflight.py --json --check-policy` before a profile. Limit work to the exact hosts and budgets in TARGET.yaml. Use `source`, `web-baseline`, and `api`; HexStrike is an independent policy/audit component.
+On a new clone run `python $WEB_VULN_MINING_ROOT/scripts/preflight.py --repair --json --check-policy`; later checks stay read-only. Limit work to exact hosts and budgets in TARGET.yaml. `verify-xss` and `verify-sqli` require an explicit candidate file; `content-discovery` requires a bounded wordlist. HexStrike is an independent policy/audit component.

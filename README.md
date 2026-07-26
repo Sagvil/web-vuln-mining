@@ -24,6 +24,8 @@ This project provides a portable, version-locked local workbench for Web applica
 | Source profile | [Gitleaks](https://github.com/gitleaks/gitleaks), [Trivy](https://github.com/aquasecurity/trivy), [Semgrep](https://github.com/semgrep/semgrep), [CodeQL](https://github.com/github/codeql) | Secrets, dependencies, IaC, rules, and data-flow analysis |
 | Web profile | [ProjectDiscovery httpx](https://github.com/projectdiscovery/httpx), [Katana](https://github.com/projectdiscovery/katana), [Nuclei](https://github.com/projectdiscovery/nuclei), [OWASP ZAP](https://www.zaproxy.org/) | HTTP inventory, route discovery, local templates, and passive DAST |
 | API profile | [Schemathesis](https://github.com/schemathesis/schemathesis), OWASP ZAP | OpenAPI/GraphQL property tests and passive API inspection |
+| Candidate verification | [Dalfox](https://github.com/hahwul/dalfox), [sqlmap](https://github.com/sqlmapproject/sqlmap) | Explicit XSS and SQL-injection candidate validation |
+| Content discovery | [ffuf](https://github.com/ffuf/ffuf) | Bounded route discovery when crawler coverage is insufficient |
 | Optional agents | Codex, [Hermes](https://github.com/NousResearch/hermes-agent), [OpenClaw](https://github.com/openclaw/openclaw) | Skill-based orchestration |
 | Optional policy service | Linux host with Python 3, systemd, SSH access, and `sudo` | HexStrike remote policy/audit deployment |
 
@@ -47,7 +49,7 @@ export WEB_VULN_MINING_ROOT="$PWD"
 ./bootstrap/install.sh --profile default --install-codex-skill
 ```
 
-The installer uses the platform package manager for prerequisites, downloads pinned releases, verifies hashes, creates an installation state file, and runs preflight. Use `--dry-run` before an installation to inspect prerequisite actions.
+The installer installs all twelve pinned tools, verifies hashes, creates an installation state file, and runs preflight. Use `--dry-run` before an installation. On an existing clone, `python scripts/preflight.py --repair --json` explicitly repairs missing or damaged tools; preflight without `--repair` remains read-only.
 
 ## Agent adapters
 
@@ -75,6 +77,7 @@ $workbench = $PWD
 $scope = "$workbench\scopes\PROJECT.yaml"
 
 python "$workbench\scripts\preflight.py" --json --check-policy
+python "$workbench\scripts\preflight.py" --repair --json
 python "$workbench\scripts\run_profile.py" $scope --profile web-baseline --validate-only
 python "$workbench\scripts\run_profile.py" $scope --profile source
 python "$workbench\scripts\run_profile.py" $scope --profile web-baseline
@@ -93,8 +96,17 @@ python "$workbench\scripts\create_report.py" <RUN_DIR>
 - `source`: Gitleaks → Trivy → Semgrep → CodeQL.
 - `web-baseline`: ProjectDiscovery `pd-httpx` → Katana → local Nuclei rules → loopback-only ZAP passive scan.
 - `api`: Schemathesis → ZAP OpenAPI import and passive scan; skips cleanly when no in-scope schema exists.
+- `verify-xss`: Dalfox against an explicit in-scope candidate URL file supplied by `--input`.
+- `verify-sqli`: sqlmap at level 1/risk 1 against an explicit in-scope candidate URL file supplied by `--input`.
+- `content-discovery`: ffuf against a bounded copy of `--wordlist`, without recursion.
 
-`verify-xss`, `verify-sqli`, and `content-discovery` are reserved for candidate-specific Dalfox, sqlmap, and ffuf workflows. They are intentionally not part of the default profiles.
+The three second-batch tools are installed by default but never execute in `source`, `web-baseline`, or `api`. Their profiles must be declared by TARGET.yaml and invoked explicitly:
+
+```powershell
+python .\scripts\run_profile.py $scope --profile verify-xss --input .\candidates\xss-urls.txt
+python .\scripts\run_profile.py $scope --profile verify-sqli --input .\candidates\sqli-urls.txt
+python .\scripts\run_profile.py $scope --profile content-discovery --wordlist .\wordlists\paths.txt --max-requests 300
+```
 
 ## HexStrike
 

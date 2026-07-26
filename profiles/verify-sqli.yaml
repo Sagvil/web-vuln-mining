@@ -1,0 +1,7 @@
+# sqlmap validates only explicit in-scope candidate URLs supplied with --input.
+name: verify-sqli
+tools: [sqlmap]
+requires: [candidate-file]
+max_targets: 20
+level: 1
+risk: 1

@@ -40,12 +40,25 @@ def validate_scope(scope: dict[str, Any], profile: str) -> list[ScopeError]:
             errors.append(ScopeError("base_urls/openapi", f"{url!r} must not contain credentials"))
         elif parsed.hostname.lower() not in include_hosts:
             errors.append(ScopeError("include_hosts", f"{parsed.hostname!r} is not present in include_hosts"))
-    if profile in {"web-baseline", "api"} and not include_hosts:
+    if profile in {"web-baseline", "api", "verify-xss", "verify-sqli", "content-discovery"} and not include_hosts:
         errors.append(ScopeError("include_hosts", f"{profile} requires at least one exact include host"))
     if profile == "web-baseline" and not _list(scope, "base_urls"):
         errors.append(ScopeError("base_urls", "web-baseline requires at least one URL"))
     if profile == "api" and not _list(scope, "openapi"):
         errors.append(ScopeError("openapi", "api requires at least one schema URL"))
+    if profile == "content-discovery" and not _list(scope, "base_urls"):
+        errors.append(ScopeError("base_urls", "content-discovery requires at least one base URL"))
+    if profile == "content-discovery":
+        discovery = scope.get("content_discovery") if isinstance(scope.get("content_discovery"), dict) else {}
+        try:
+            max_requests = int(discovery.get("max_requests", 300))
+        except (TypeError, ValueError):
+            max_requests = 0
+        if not 1 <= max_requests <= MAX_CRAWL_PAGES:
+            errors.append(ScopeError("content_discovery.max_requests", f"must be an integer from 1 to {MAX_CRAWL_PAGES}"))
+        statuses = discovery.get("match_statuses", [200, 204, 301, 302, 307, 401, 403])
+        if not isinstance(statuses, list) or not statuses or any(not isinstance(status, int) or not 100 <= status <= 599 for status in statuses):
+            errors.append(ScopeError("content_discovery.match_statuses", "must be a non-empty list of HTTP status integers"))
     declared_profiles = {str(item) for item in _list(scope, "profiles")}
     if declared_profiles and profile not in declared_profiles:
         errors.append(ScopeError("profiles", f"{profile!r} is not enabled by this target manifest"))

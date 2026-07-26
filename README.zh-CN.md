@@ -34,6 +34,8 @@ HexStrike 是独立的可选远端策略、审计和复核组件。即使远端�
 | 源码审计 | [Gitleaks](https://github.com/gitleaks/gitleaks)、[Trivy](https://github.com/aquasecurity/trivy)、[Semgrep](https://github.com/semgrep/semgrep)、[CodeQL](https://github.com/github/codeql) | 密钥、依赖/IaC、规则扫描和跨文件数据流分析 |
 | Web 基线 | [ProjectDiscovery httpx](https://github.com/projectdiscovery/httpx)、[Katana](https://github.com/projectdiscovery/katana)、[Nuclei](https://github.com/projectdiscovery/nuclei)、[OWASP ZAP](https://www.zaproxy.org/) | HTTP 指纹、路由/JS 爬取、本地模板检查和被动 DAST |
 | API 测试 | [Schemathesis](https://github.com/schemathesis/schemathesis)、OWASP ZAP | OpenAPI/GraphQL 性质测试、契约偏差和 API 被动检查 |
+| 候选验证 | [Dalfox](https://github.com/hahwul/dalfox)、[sqlmap](https://github.com/sqlmapproject/sqlmap) | 对明确的 XSS 与 SQL 注入候选进行验证 |
+| 内容发现 | [ffuf](https://github.com/ffuf/ffuf) | Katana 覆盖不足时进行受预算限制的路由发现 |
 | 可选 Agent | Codex、[Hermes](https://github.com/NousResearch/hermes-agent)、[OpenClaw](https://github.com/openclaw/openclaw) | 通过 Skill 调度工作台 |
 | 可选 HexStrike 服务 | 具备 Python 3、systemd、SSH 和 `sudo` 的 Linux 主机 | 部署远端策略和审计服务 |
 
@@ -59,7 +61,7 @@ export WEB_VULN_MINING_ROOT="$PWD"
 ./bootstrap/install.sh --profile default --install-codex-skill
 ```
 
-安装器会自动安装基础依赖、下载并校验固定版本工具、写入用户数据目录的安装状态，最后运行预检。先查看将执行的基础依赖操作：
+安装器会自动安装基础依赖和全部 12 个固定版本工具、校验哈希、写入安装状态并运行预检。已有克隆可显式执行 `python scripts/preflight.py --repair --json` 修复缺失、损坏或版本不符的工具；不带 `--repair` 的预检保持只读。
 
 ```powershell
 .\bootstrap\install.ps1 -DryRun
@@ -91,6 +93,7 @@ export WEB_VULN_MINING_ROOT="$PWD"
 $scope = '.\scopes\PROJECT.yaml'
 
 python .\scripts\preflight.py --json --check-policy
+python .\scripts\preflight.py --repair --json
 python .\scripts\run_profile.py $scope --profile web-baseline --validate-only
 python .\scripts\run_profile.py $scope --profile source
 python .\scripts\run_profile.py $scope --profile web-baseline
@@ -107,8 +110,17 @@ python .\scripts\create_report.py <RUN_DIR>
 | `source` | Gitleaks → Trivy → Semgrep → CodeQL | 有源码的 Web 项目 |
 | `web-baseline` | pd-httpx → Katana → 本地 Nuclei 规则 → ZAP 被动扫描 | 网站、后台、HTTP 服务 |
 | `api` | Schemathesis → ZAP OpenAPI 导入和被动扫描 | 存在范围内 OpenAPI/GraphQL Schema 的 API |
+| `verify-xss` | Dalfox | `--input` 提供的范围内 XSS 候选 URL |
+| `verify-sqli` | sqlmap（level 1/risk 1） | `--input` 提供的范围内 SQL 注入候选 URL |
+| `content-discovery` | ffuf | `--wordlist` 的受限副本，不递归 |
 
-`verify-xss`、`verify-sqli`、`content-discovery` 保留给明确候选问题的 Dalfox、sqlmap、ffuf 工作流，不在默认流程中自动执行。
+第二批工具默认安装，但不会随 `source`、`web-baseline` 或 `api` 自动执行。必须先在 TARGET.yaml 声明相应 Profile，再显式运行：
+
+```powershell
+python .\scripts\run_profile.py $scope --profile verify-xss --input .\candidates\xss-urls.txt
+python .\scripts\run_profile.py $scope --profile verify-sqli --input .\candidates\sqli-urls.txt
+python .\scripts\run_profile.py $scope --profile content-discovery --wordlist .\wordlists\paths.txt --max-requests 300
+```
 
 ## Codex、Hermes 与 OpenClaw
 

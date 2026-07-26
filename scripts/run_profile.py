@@ -21,6 +21,7 @@ from scope_validation import validate_scope
 DEFAULT_PROFILE_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_SECONDS
 ZAP_API_KEY = ""  # Empty by design: ZAP is bound only to loopback by this runner.
 MAX_DISCOVERED_URLS = 5000
+MAX_VERIFY_TARGETS = 20  # Maximum explicit candidate URLs processed by one verification run.
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -239,12 +240,90 @@ def _api(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]], s
     _zap_passive(schemas, run_dir, settings, statuses, "zap-api-passive", int(scope.get("rate_limit", 5)), openapi_schemas=schemas)
 
 
+def _candidate_urls(candidate_file: Path, scope: dict[str, Any]) -> list[str]:
+    """Read explicit candidate URLs and retain only the target manifest's scope."""
+    urls: list[str] = []
+    for line in candidate_file.read_text(encoding="utf-8", errors="replace").splitlines():
+        url = line.strip().lstrip("\ufeff")
+        if url and is_allowed_url(url, scope) and url not in urls:
+            urls.append(url)
+        if len(urls) >= MAX_VERIFY_TARGETS:
+            break
+    return urls
+
+
+def _verify_xss(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]], candidate_file: Path | None) -> None:
+    if not candidate_file or not candidate_file.is_file():
+        statuses.append({"tool": "dalfox", "status": "failed", "reason": "verify-xss requires --input candidate URL file"})
+        return
+    urls = _candidate_urls(candidate_file, scope)
+    if not urls:
+        statuses.append({"tool": "dalfox", "status": "failed", "reason": "candidate file contains no in-scope URLs"})
+        return
+    if _missing("dalfox", statuses):
+        return
+    raw, logs = run_dir / "raw", run_dir / "logs"
+    targets = raw / "dalfox-targets.txt"
+    targets.write_text("\n".join(urls) + "\n", encoding="utf-8")
+    output = raw / "dalfox.jsonl"
+    headers = _header_values(scope)
+    command = command_for("dalfox") + ["scan", str(targets), "--format", "jsonl", "--output", str(output), "--silence"] + [element for header in headers for element in ("-H", header)]
+    _append_status(statuses, "dalfox", run_command(command, logs / "dalfox.json", acceptable={0, 1}), output)
+
+
+def _verify_sqli(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]], candidate_file: Path | None) -> None:
+    if not candidate_file or not candidate_file.is_file():
+        statuses.append({"tool": "sqlmap", "status": "failed", "reason": "verify-sqli requires --input candidate URL file"})
+        return
+    urls = _candidate_urls(candidate_file, scope)
+    if not urls:
+        statuses.append({"tool": "sqlmap", "status": "failed", "reason": "candidate file contains no in-scope URLs"})
+        return
+    if _missing("sqlmap", statuses):
+        return
+    raw, logs = run_dir / "raw", run_dir / "logs"
+    index: list[dict[str, Any]] = []
+    delay = f"{max(0.2, 1 / max(1, int(scope.get('rate_limit', 5)))):.2f}"
+    for position, url in enumerate(urls):
+        output_dir = raw / "sqlmap" / str(position)
+        command = command_for("sqlmap") + ["-u", url, "--batch", "--level", "1", "--risk", "1", "--threads", "1", "--delay", delay, "--output-dir", str(output_dir)]
+        record = run_command(command, logs / f"sqlmap-{position}.json", acceptable={0, 1})
+        _append_status(statuses, f"sqlmap-{position}", record, output_dir)
+        index.append({"url": url, "output_dir": str(output_dir), "command": command, "status": record["status"]})
+    write_json(raw / "sqlmap-index.json", {"candidates": index})
+
+
+def _content_discovery(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]], wordlist: Path | None, max_requests: int) -> None:
+    if not wordlist or not wordlist.is_file():
+        statuses.append({"tool": "ffuf", "status": "failed", "reason": "content-discovery requires --wordlist"})
+        return
+    if _missing("ffuf", statuses):
+        return
+    raw, logs = run_dir / "raw", run_dir / "logs"
+    bounded = raw / "ffuf-wordlist.txt"
+    values = [line for line in wordlist.read_text(encoding="utf-8", errors="replace").splitlines() if line.strip()][:max_requests]
+    if not values:
+        statuses.append({"tool": "ffuf", "status": "failed", "reason": "wordlist is empty"})
+        return
+    bounded.write_text("\n".join(values) + "\n", encoding="utf-8")
+    discovery = scope.get("content_discovery") if isinstance(scope.get("content_discovery"), dict) else {}
+    statuses_filter = ",".join(str(item) for item in discovery.get("match_statuses", [200, 204, 301, 302, 307, 401, 403]))
+    for position, base_url in enumerate(allowed_urls(scope)):
+        target = base_url.rstrip("/") + "/FUZZ"
+        output = raw / f"ffuf-{position}.json"
+        command = command_for("ffuf") + ["-w", str(bounded), "-u", target, "-rate", str(int(scope.get("rate_limit", 5))), "-t", "1", "-maxtime", "300", "-mc", statuses_filter, "-of", "json", "-o", str(output), "-noninteractive"]
+        _append_status(statuses, f"ffuf-{position}", run_command(command, logs / f"ffuf-{position}.json", acceptable={0, 1}), output)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("scope", type=Path)
-    parser.add_argument("--profile", choices=["source", "web-baseline", "api"], required=True)
+    parser.add_argument("--profile", choices=["source", "web-baseline", "api", "verify-xss", "verify-sqli", "content-discovery"], required=True)
     parser.add_argument("--hexstrike-status", default="optional-not-requested")
     parser.add_argument("--validate-only", action="store_true", help="validate TARGET.yaml without starting a profile")
+    parser.add_argument("--input", type=Path, help="explicit in-scope candidate URL file for verify-xss or verify-sqli")
+    parser.add_argument("--wordlist", type=Path, help="wordlist used only by content-discovery")
+    parser.add_argument("--max-requests", type=int, default=None, help="maximum wordlist entries consumed by content-discovery; overrides TARGET.yaml")
     args = parser.parse_args()
     scope = load_yaml(args.scope)
     # Relative local paths are always relative to the repository, not the terminal's current directory.
@@ -265,6 +344,12 @@ def main() -> int:
     if args.validate_only:
         print(json.dumps({"scope": str(args.scope), "profile": args.profile, "status": "valid"}, ensure_ascii=False))
         return 0
+    if args.profile in {"verify-xss", "verify-sqli"} and not args.input:
+        print(f"{args.profile} requires --input", file=sys.stderr)
+        return 2
+    if args.profile == "content-discovery" and not args.wordlist:
+        print("content-discovery requires --wordlist", file=sys.stderr)
+        return 2
     settings = load_yaml(WORKBENCH_ROOT / "config" / "defaults.yaml")
     run_dir = RUNS_DIR / f"{utc_stamp()}-{str(scope.get('name', 'project')).lower()}-{args.profile}"
     for directory in (run_dir / "raw", run_dir / "sarif", run_dir / "logs", run_dir / "evidence"):
@@ -275,8 +360,22 @@ def main() -> int:
         _source(scope, run_dir, statuses)
     elif args.profile == "web-baseline":
         _web(scope, run_dir, statuses, settings)
-    else:
+    elif args.profile == "api":
         _api(scope, run_dir, statuses, settings)
+    else:
+        candidate_file = args.input.expanduser() if args.input else None
+        if candidate_file and not candidate_file.is_absolute():
+            candidate_file = WORKBENCH_ROOT / candidate_file
+        wordlist = args.wordlist.expanduser() if args.wordlist else None
+        if wordlist and not wordlist.is_absolute():
+            wordlist = WORKBENCH_ROOT / wordlist
+        if args.profile == "verify-xss":
+            _verify_xss(scope, run_dir, statuses, candidate_file)
+        elif args.profile == "verify-sqli":
+            _verify_sqli(scope, run_dir, statuses, candidate_file)
+        else:
+            configured_limit = int(((scope.get("content_discovery") or {}).get("max_requests", 300)))
+            _content_discovery(scope, run_dir, statuses, wordlist, max(1, min(args.max_requests if args.max_requests is not None else configured_limit, 10_000)))
     manifest = {"schema_version": 1, "run_id": run_dir.name, "profile": args.profile, "scope": str(args.scope), "local_tool_status": statuses, "hexstrike_status": args.hexstrike_status}
     write_json(run_dir / "run-manifest.json", manifest)
     print(json.dumps(manifest, ensure_ascii=False, indent=2))

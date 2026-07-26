@@ -8,4 +8,4 @@ Set `WEB_VULN_MINING_ROOT` to the cloned repository root, then run:
 python $env:WEB_VULN_MINING_ROOT\scripts\preflight.py --json --check-policy
 python $env:WEB_VULN_MINING_ROOT\scripts\run_profile.py $env:WEB_VULN_MINING_ROOT\scopes\PROJECT.yaml --profile web-baseline
 ```
-Use `source`, `web-baseline`, or `api` only. Normalize and report each completed run. HexStrike is optional for local profile completion; report its status independently.
+Use `source`, `web-baseline`, `api`, `verify-xss`, `verify-sqli`, or `content-discovery`. Run `preflight.py --repair` once on a new clone. The three verification/discovery profiles require explicit candidate or wordlist input and must be declared by TARGET.yaml. Normalize and report each completed run. HexStrike is optional for local profile completion; report its status independently.

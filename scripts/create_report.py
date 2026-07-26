@@ -20,7 +20,7 @@ def main() -> int:
     parser.add_argument("run_dir", type=Path)
     args = parser.parse_args()
     summary = json.loads((args.run_dir / "summary.json").read_text(encoding="utf-8"))
-    lines = [f"# {REPORT_TITLE_PREFIX} — {summary['run_id']}", "", f"- Profile: `{summary['profile']}`", f"- HEXSTRIKE_STATUS: `{summary['hexstrike_status']}`", f"- Candidate findings: `{summary['counts']['candidate']}`", "", "## LOCAL_TOOL_STATUS"]
+    lines = [f"# {REPORT_TITLE_PREFIX} — {summary['run_id']}", "", f"- Profile: `{summary['profile']}`", f"- HEXSTRIKE_STATUS: `{summary['hexstrike_status']}`", f"- Candidate findings: `{summary['counts']['candidate']}`", f"- Reproduced findings: `{summary['counts']['reproduced']}`", f"- Excluded findings: `{summary['counts']['excluded']}`", "", "## LOCAL_TOOL_STATUS"]
     for tool in summary["local_tool_status"]:
         detail = tool.get("reason") or tool.get("fallback") or tool.get("output") or ""
         lines.append(f"- `{tool.get('tool', 'unknown')}`: `{tool.get('status', 'unknown')}` {detail}")
@@ -33,6 +33,8 @@ def main() -> int:
             lines.insert(len(lines) - 1, f"- Parameter: `{finding['parameter']}`")
         if finding.get("evidence"):
             lines.insert(len(lines) - 1, f"- Evidence: `{finding['evidence']}`")
+        if finding.get("reproduction_command"):
+            lines.insert(len(lines) - 1, f"- Reproduction command: `{' '.join(str(part) for part in finding['reproduction_command'])}`")
     output = args.run_dir / "report.md"
     output.write_text("\n".join(lines), encoding="utf-8")
     print(output)

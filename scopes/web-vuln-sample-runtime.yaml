@@ -16,8 +16,14 @@ crawl_budget:
 profiles:
   - web-baseline
   - api
+  - verify-xss
+  - verify-sqli
+  - content-discovery
 codeql:
   languages: [python]
   build_command: ""
 auth:
   headers_file: ""
+content_discovery:
+  max_requests: 20
+  match_statuses: [200, 301, 302, 401, 403]

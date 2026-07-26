@@ -3,12 +3,16 @@ param(
     [switch]$WithHexStrike,
     [string]$HexStrikeConfig = '',
     [switch]$InstallCodexSkill,
+    [switch]$Repair,
+    [string]$OnlyTools = '',
     [switch]$DryRun
 )
 # ============================ Configuration zone ============================
-# Profile: reserved installation profile; default installs the first-batch Web/API toolchain.
+# Profile: reserved installation profile; default installs all twelve locked Web/API tools.
 # WithHexStrike: deploy and validate the remote policy service using HexStrikeConfig.
 # InstallCodexSkill: copy the portable Codex adapter into the current user's Skill directory.
+# Repair: explicit idempotent self-healing invocation from preflight.py.
+# OnlyTools: comma-separated repair subset; empty installs all twelve tools.
 # DryRun: show prerequisite actions without downloading tool archives.
 $ErrorActionPreference = 'Stop'
 $RepositoryRoot = Split-Path -Parent $PSScriptRoot
@@ -28,11 +32,25 @@ Ensure-WingetPackage 'Python.Python.3.12' 'python'
 Ensure-WingetPackage 'EclipseAdoptium.Temurin.17.JDK' 'java'
 Ensure-WingetPackage 'astral-sh.uv' 'uvx'
 if (-not $DryRun) {
-    & (Join-Path $RepositoryRoot 'scripts\install_tools.ps1') -DataRoot $DataRoot
-    $state = @{ schema_version = 1; installed_at = (Get-Date).ToUniversalTime().ToString('o'); platform = 'windows'; profile = $Profile; data_root = $DataRoot }
-    $state | ConvertTo-Json | Set-Content -Encoding utf8 (Join-Path $DataRoot 'install-state.json')
-    & python (Join-Path $RepositoryRoot 'scripts\preflight.py') --json --check-policy
+    $requested = @($OnlyTools.Split(',', [StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object { $_.Trim() })
+    $coreNames = @('semgrep','codeql','trivy','gitleaks','pd-httpx','katana','nuclei','zap','schemathesis','runtime')
+    $extensionNames = @('dalfox','sqlmap','ffuf')
+    if ($requested.Count -eq 0 -or @($requested | Where-Object { $_ -in $coreNames }).Count -gt 0) { & (Join-Path $RepositoryRoot 'scripts\install_tools.ps1') -DataRoot $DataRoot -OnlyTools $OnlyTools }
+    if ($requested.Count -eq 0 -or @($requested | Where-Object { $_ -in $extensionNames }).Count -gt 0) { & (Join-Path $RepositoryRoot 'scripts\install_extensions.ps1') -DataRoot $DataRoot -OnlyTools $OnlyTools }
+    if (-not ($Repair -and $requested.Count -gt 0)) {
+        $env:WEB_VULN_MINING_DATA = $DataRoot
+        & python (Join-Path $RepositoryRoot 'scripts\preflight.py') --json --check-policy
+        if ($LASTEXITCODE -ne 0) { throw 'Post-install preflight failed.' }
+        $preflight = Get-Content -LiteralPath (Join-Path $RepositoryRoot 'runs\preflight-latest.json') -Raw | ConvertFrom-Json
+        $lockPath = Join-Path $RepositoryRoot 'config\tool-lock.windows.json'
+        $state = @{ schema_version = 1; installed_at = (Get-Date).ToUniversalTime().ToString('o'); platform = 'windows'; profile = $Profile; data_root = $DataRoot; lock_sha256 = (Get-FileHash -LiteralPath $lockPath -Algorithm SHA256).Hash.ToLowerInvariant(); tools = $preflight.tools }
+        $state | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 (Join-Path $DataRoot 'install-state.json')
+    }
+    else {
+        Write-Host "Repair subset installed; caller will re-run preflight: $OnlyTools"
+    }
 }
+elseif ($Repair) { Write-Host "[dry-run] repair locked tools: $OnlyTools" }
 if ($InstallCodexSkill) {
     $skillRoot = Join-Path $env:USERPROFILE '.codex\skills\web-vuln-mining'
     New-Item -ItemType Directory -Force -Path $skillRoot | Out-Null

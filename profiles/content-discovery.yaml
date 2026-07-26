@@ -1,0 +1,6 @@
+# ffuf consumes a bounded copy of --wordlist and does not recurse by default.
+name: content-discovery
+tools: [ffuf]
+requires: [wordlist]
+max_requests: 300
+recursive: false

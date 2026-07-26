@@ -1,11 +1,13 @@
 param(
     [string]$DataRoot = $env:WEB_VULN_MINING_DATA,
+    [string]$OnlyTools = '',
     [switch]$SkipZap
 )
 # Web vulnerability mining tool installer
 # ============================ Configuration zone ============================
 # DataRoot: user-owned directory for downloaded archives and executables.
 # SkipZap: omit the ZAP package when Java or ZAP is intentionally managed elsewhere.
+# OnlyTools: comma-separated subset used by preflight repair; empty installs the full first batch.
 $ErrorActionPreference = 'Stop'
 $WorkbenchRoot = Split-Path -Parent $PSScriptRoot              # Portable repository root.
 if ([string]::IsNullOrWhiteSpace($DataRoot)) { $DataRoot = Join-Path $env:LOCALAPPDATA 'web-vuln-mining' }
@@ -13,6 +15,7 @@ $PythonExecutable = (Get-Command python -ErrorAction Stop).Source # Python used 
 $CacheDirectory = Join-Path $DataRoot 'cache'                  # Download cache; safe to clear after installation.
 $BinDirectory = Join-Path $DataRoot 'bin'                      # Pinned executable location.
 $InstallZap = -not $SkipZap                                    # Install ZAP package when true.
+$RequestedTools = @($OnlyTools.Split(',', [StringSplitOptions]::RemoveEmptyEntries) | ForEach-Object { $_.Trim() })
 # ============================================================================
 
 $Releases = @(
@@ -81,16 +84,20 @@ function Install-ZipBinary([hashtable]$Release) {
     Copy-Item -LiteralPath $Binary.FullName -Destination (Join-Path $BinDirectory $Release.Destination) -Force
 }
 
+function Test-Selected([string]$Name) { return $RequestedTools.Count -eq 0 -or $Name -in $RequestedTools }
+
 New-Item -ItemType Directory -Path $CacheDirectory,$BinDirectory -Force | Out-Null
-foreach ($Release in $Releases) { Install-ZipBinary $Release }
+foreach ($Release in $Releases) { if (Test-Selected $Release.Name) { Install-ZipBinary $Release } }
 
-$CodeQlArchive = Join-Path $CacheDirectory $CodeQl.Archive
-Get-VerifiedDownload $CodeQl.Url $CodeQlArchive $CodeQl.Sha256
-Remove-Item -LiteralPath (Join-Path $BinDirectory 'codeql') -Recurse -Force -ErrorAction SilentlyContinue
-& tar.exe -xzf $CodeQlArchive -C $BinDirectory
-if (-not (Test-Path -LiteralPath (Join-Path $BinDirectory 'codeql\codeql.exe'))) { throw 'CodeQL extraction did not produce bin\codeql\codeql.exe' }
+if (Test-Selected 'codeql') {
+    $CodeQlArchive = Join-Path $CacheDirectory $CodeQl.Archive
+    Get-VerifiedDownload $CodeQl.Url $CodeQlArchive $CodeQl.Sha256
+    Remove-Item -LiteralPath (Join-Path $BinDirectory 'codeql') -Recurse -Force -ErrorAction SilentlyContinue
+    & tar.exe -xzf $CodeQlArchive -C $BinDirectory
+    if (-not (Test-Path -LiteralPath (Join-Path $BinDirectory 'codeql\codeql.exe'))) { throw 'CodeQL extraction did not produce bin\codeql\codeql.exe' }
+}
 
-if ($InstallZap) {
+if ($InstallZap -and (Test-Selected 'zap')) {
     $ZapArchive = Join-Path $CacheDirectory $Zap.Archive
     Get-VerifiedDownload $Zap.Url $ZapArchive $Zap.Sha256
     $ZapExtract = Join-Path $CacheDirectory 'extract-zap'
@@ -102,10 +109,14 @@ if ($InstallZap) {
     Copy-Item -LiteralPath $ZapBat.Directory.FullName -Destination (Join-Path $BinDirectory 'zap') -Recurse -Force
 }
 
-$PythonTools = Join-Path $BinDirectory 'python-tools'
-if (-not (Test-Path -LiteralPath (Join-Path $PythonTools 'Scripts\python.exe'))) { & $PythonExecutable -m venv $PythonTools }
-& (Join-Path $PythonTools 'Scripts\python.exe') -m pip install --upgrade pip 'semgrep==1.171.0'
-& $PythonExecutable -m pip install --upgrade -r (Join-Path $WorkbenchRoot 'requirements-runner.txt')
+if (Test-Selected 'semgrep') {
+    $PythonTools = Join-Path $BinDirectory 'python-tools'
+    if (-not (Test-Path -LiteralPath (Join-Path $PythonTools 'Scripts\python.exe'))) { & $PythonExecutable -m venv $PythonTools }
+    & (Join-Path $PythonTools 'Scripts\python.exe') -m pip install --upgrade pip 'semgrep==1.171.0'
+}
+if ((Test-Selected 'runtime') -or $RequestedTools.Count -eq 0) {
+    & $PythonExecutable -m pip install --upgrade -r (Join-Path $WorkbenchRoot 'requirements-runner.txt')
+}
 
 Write-Host 'Installed Web vulnerability mining toolchain:'
 Get-ChildItem -LiteralPath $BinDirectory -Recurse -File | Where-Object { $_.Name -match '^(trivy|gitleaks|nuclei|pd-httpx|katana|codeql|semgrep|zap)\.(exe|bat)$' } | Select-Object FullName

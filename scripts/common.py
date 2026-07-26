@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -63,10 +64,12 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def platform_lock_path() -> Path:
-    """Use the platform lock while retaining the old Windows lock during migration."""
+    """Select the required platform lock; unsupported or incomplete clones fail clearly."""
     name = "tool-lock.windows.json" if os.name == "nt" else "tool-lock.linux.json"
     candidate = WORKBENCH_ROOT / "config" / name
-    return candidate if candidate.is_file() else WORKBENCH_ROOT / "config" / "tool-lock.json"
+    if not candidate.is_file():
+        raise RuntimeError(f"Missing platform lock: {candidate}")
+    return candidate
 
 
 def tool_path(name: str) -> Path | None:
@@ -91,6 +94,9 @@ def tool_path(name: str) -> Path | None:
 def command_for(name: str) -> list[str] | None:
     path = tool_path(name)
     if path:
+        if name == "sqlmap":
+            configured = os.environ.get("WEB_VULN_MINING_PYTHON", "").strip() or str(runtime_settings().get("python") or "").strip()
+            return [configured or sys.executable, str(WORKBENCH_ROOT / "scripts" / "sqlmap_launcher.py"), "--sqlmap-root", str(path.parent)]
         return [str(path)]
     if name == "schemathesis":
         uvx = shutil.which("uvx")
