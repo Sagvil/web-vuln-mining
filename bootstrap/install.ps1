@@ -40,5 +40,9 @@ if ($InstallCodexSkill) {
 }
 if ($WithHexStrike) {
     if ([string]::IsNullOrWhiteSpace($HexStrikeConfig)) { throw 'WithHexStrike requires -HexStrikeConfig config\hexstrike.remote.local.yaml' }
-    & python (Join-Path $RepositoryRoot 'scripts\hexstrike_deploy.py') --config $HexStrikeConfig
+    if ($DryRun) { Write-Host "[dry-run] install HexStrike requirements and deploy using $HexStrikeConfig" }
+    else {
+        & python -m pip install --upgrade -r (Join-Path $RepositoryRoot 'requirements-hexstrike.txt')
+        & python (Join-Path $RepositoryRoot 'scripts\hexstrike_deploy.py') --config $HexStrikeConfig
+    }
 }

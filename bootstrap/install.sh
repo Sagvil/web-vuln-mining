@@ -29,10 +29,8 @@ install_prerequisites() {
   if command -v apt-get >/dev/null; then
     run sudo apt-get update
     run sudo apt-get install -y git python3 python3-venv python3-pip openjdk-17-jre-headless curl unzip tar openssh-client
-  elif command -v brew >/dev/null; then
-    run brew install git python@3.12 openjdk@17 uv curl
   else
-    echo "Supported package managers are apt-get and brew." >&2; exit 1
+    echo "This bootstrap currently supports Ubuntu/Debian systems with apt-get." >&2; exit 1
   fi
   command -v uvx >/dev/null || run python3 -m pip install --user 'uv>=0.4'
 }
@@ -77,7 +75,7 @@ if [[ "$DRY_RUN" = 0 ]]; then
   rm -rf "${DATA_ROOT}/bin/zap"; mkdir -p "${DATA_ROOT}/bin/zap"; unzip -q -o "$zap_archive" -d "${DATA_ROOT}/bin/zap"
   python3 -m venv "${DATA_ROOT}/bin/python-tools"
   "${DATA_ROOT}/bin/python-tools/bin/python" -m pip install --upgrade pip 'semgrep==1.171.0' 'PyYAML==6.0.3'
-  python3 -m pip install --user 'PyYAML==6.0.3'
+  python3 -m pip install --user -r "$ROOT/requirements-runner.txt"
   printf '{"schema_version":1,"platform":"linux","profile":"%s","data_root":"%s"}\n' "$PROFILE" "$DATA_ROOT" > "${DATA_ROOT}/install-state.json"
   WEB_VULN_MINING_DATA="$DATA_ROOT" python3 "$ROOT/scripts/preflight.py" --json --check-policy
 fi
@@ -87,5 +85,6 @@ if [[ "$INSTALL_CODEX_SKILL" = 1 ]]; then
 fi
 if [[ "$WITH_HEXSTRIKE" = 1 ]]; then
   [[ -n "$HEXSTRIKE_CONFIG" ]] || { echo '--with-hexstrike requires --hexstrike-config' >&2; exit 2; }
-  python3 "$ROOT/scripts/hexstrike_deploy.py" --config "$HEXSTRIKE_CONFIG"
+  if [[ "$DRY_RUN" = 1 ]]; then echo "[dry-run] install HexStrike requirements and deploy using $HEXSTRIKE_CONFIG"
+  else python3 -m pip install --user --upgrade -r "$ROOT/requirements-hexstrike.txt"; python3 "$ROOT/scripts/hexstrike_deploy.py" --config "$HEXSTRIKE_CONFIG"; fi
 fi

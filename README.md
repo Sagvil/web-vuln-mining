@@ -18,9 +18,9 @@ This project provides a portable, version-locked local workbench for Web applica
 
 | Category | Requirement | Purpose |
 | --- | --- | --- |
-| Operating system | Windows 10/11 x64, Ubuntu/Debian x64, or macOS with Homebrew | Bootstrap platform |
+| Operating system | Windows 10/11 x64 or Ubuntu/Debian x64 | Bootstrap platform |
 | Prerequisites | Git, Python 3.11+, Java 17, `uv`/`uvx`, OpenSSH client, `curl`, `tar`, and `unzip` | Repository, Python tools, ZAP, Schemathesis, SSH integration, archive handling |
-| Package manager | Windows: `winget`; Linux: `apt`; macOS: `brew` | Installs prerequisites automatically |
+| Package manager | Windows: `winget`; Ubuntu/Debian: `apt` | Installs prerequisites automatically |
 | Source profile | [Gitleaks](https://github.com/gitleaks/gitleaks), [Trivy](https://github.com/aquasecurity/trivy), [Semgrep](https://github.com/semgrep/semgrep), [CodeQL](https://github.com/github/codeql) | Secrets, dependencies, IaC, rules, and data-flow analysis |
 | Web profile | [ProjectDiscovery httpx](https://github.com/projectdiscovery/httpx), [Katana](https://github.com/projectdiscovery/katana), [Nuclei](https://github.com/projectdiscovery/nuclei), [OWASP ZAP](https://www.zaproxy.org/) | HTTP inventory, route discovery, local templates, and passive DAST |
 | API profile | [Schemathesis](https://github.com/schemathesis/schemathesis), OWASP ZAP | OpenAPI/GraphQL property tests and passive API inspection |
@@ -63,6 +63,7 @@ Hermes can also install from Git: `hermes skills tap add https://github.com/OWNE
 
 - **Project manifest:** copy `scopes/TARGET.example.yaml` to `scopes/<project>.yaml`.
 - **Scope controls:** set exact `include_hosts`, `exclude_paths`, `rate_limit`, `crawl_budget.max_depth`, and `crawl_budget.max_pages` before running a profile.
+- **Scope validation:** `run_profile.py` rejects placeholder names, out-of-scope URLs, credential-bearing URLs, unsupported paths, unbounded crawl budgets, and profiles not declared by the manifest.
 - **Authentication headers:** set `auth.headers_file` to a UTF-8 text file containing one `Name: value` request header per line when the supported tools need an authenticated context.
 - **Versions:** platform locks under `config/tool-lock.*.json` are the pinned executable/package inventory.
 - **Private runtime:** copy `config/runtime.example.yaml` to `config/local.runtime.yaml` only when overriding tool locations or a HexStrike bridge.
@@ -74,6 +75,7 @@ $workbench = $PWD
 $scope = "$workbench\scopes\PROJECT.yaml"
 
 python "$workbench\scripts\preflight.py" --json --check-policy
+python "$workbench\scripts\run_profile.py" $scope --profile web-baseline --validate-only
 python "$workbench\scripts\run_profile.py" $scope --profile source
 python "$workbench\scripts\run_profile.py" $scope --profile web-baseline
 python "$workbench\scripts\run_profile.py" $scope --profile api

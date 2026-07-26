@@ -3,11 +3,13 @@ from __future__ import annotations
 import argparse, shutil, subprocess
 from pathlib import Path
 from common import load_yaml
+from hexstrike_deploy import validate_remote_config
 # ============================ Configuration zone ============================
 SERVICE_NAME = "web-vuln-mining-hexstrike.service"  # Managed remote service name.
 # ============================================================================
 def main() -> int:
     parser = argparse.ArgumentParser(); parser.add_argument("--config", type=Path, required=True); args = parser.parse_args(); c = load_yaml(args.config)
+    validate_remote_config(c)
     ssh = shutil.which("ssh")
     if not ssh: raise SystemExit("OpenSSH client is required")
     target = f"{c['ssh_user']}@{c['ssh_host']}"

@@ -34,7 +34,9 @@ def runtime_settings() -> dict[str, Any]:
 
 
 def data_root() -> Path:
-    value = str(runtime_settings().get("data_root") or "").strip()
+    # An explicit process environment always wins over a local file so agents
+    # can run separate, isolated toolchains without modifying the repository.
+    value = os.environ.get("WEB_VULN_MINING_DATA", "").strip() or str(runtime_settings().get("data_root") or "").strip()
     return Path(value).expanduser() if value else PLATFORM_DATA_ROOT
 
 

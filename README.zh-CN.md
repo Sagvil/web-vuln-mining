@@ -28,9 +28,9 @@ HexStrike 是独立的可选远端策略、审计和复核组件。即使远端�
 
 | 分类 | 要求 | 用途 |
 | --- | --- | --- |
-| 操作系统 | Windows 10/11 x64、Ubuntu/Debian x64，或安装 Homebrew 的 macOS | 工作台运行平台 |
+| 操作系统 | Windows 10/11 x64、Ubuntu/Debian x64 | 工作台运行平台 |
 | 基础环境 | Git、Python 3.11+、Java 17、`uv`/`uvx`、OpenSSH Client、`curl`、`tar`、`unzip` | 拉取仓库、运行 Python 工具与脚本、运行 ZAP、执行 SSH 集成和解压工具包 |
-| 包管理器 | Windows 使用 `winget`；Ubuntu/Debian 使用 `apt`；macOS 使用 `brew` | Bootstrap 自动补齐基础环境 |
+| 包管理器 | Windows 使用 `winget`；Ubuntu/Debian 使用 `apt` | Bootstrap 自动补齐基础环境 |
 | 源码审计 | [Gitleaks](https://github.com/gitleaks/gitleaks)、[Trivy](https://github.com/aquasecurity/trivy)、[Semgrep](https://github.com/semgrep/semgrep)、[CodeQL](https://github.com/github/codeql) | 密钥、依赖/IaC、规则扫描和跨文件数据流分析 |
 | Web 基线 | [ProjectDiscovery httpx](https://github.com/projectdiscovery/httpx)、[Katana](https://github.com/projectdiscovery/katana)、[Nuclei](https://github.com/projectdiscovery/nuclei)、[OWASP ZAP](https://www.zaproxy.org/) | HTTP 指纹、路由/JS 爬取、本地模板检查和被动 DAST |
 | API 测试 | [Schemathesis](https://github.com/schemathesis/schemathesis)、OWASP ZAP | OpenAPI/GraphQL 性质测试、契约偏差和 API 被动检查 |
@@ -50,7 +50,7 @@ $env:WEB_VULN_MINING_ROOT = $PWD
 .\bootstrap\install.ps1 -Profile default -InstallCodexSkill
 ```
 
-### Linux / macOS
+### Ubuntu / Debian
 
 ```bash
 git clone https://github.com/OWNER/web-vuln-mining.git
@@ -83,12 +83,15 @@ export WEB_VULN_MINING_ROOT="$PWD"
 
 本机工具路径或 HexStrike bridge 覆盖项写入 `config/local.runtime.yaml`。先从 `config/runtime.example.yaml` 复制创建；该文件被 Git 忽略。
 
+运行器会在启动前校验项目名、URL、`include_hosts`、排除路径、速率、爬取预算和 Profile 声明；包含凭据、超出 `include_hosts` 或未声明 Profile 的配置会被拒绝。
+
 ## 执行 Profile
 
 ```powershell
 $scope = '.\scopes\PROJECT.yaml'
 
 python .\scripts\preflight.py --json --check-policy
+python .\scripts\run_profile.py $scope --profile web-baseline --validate-only
 python .\scripts\run_profile.py $scope --profile source
 python .\scripts\run_profile.py $scope --profile web-baseline
 python .\scripts\run_profile.py $scope --profile api

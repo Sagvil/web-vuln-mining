@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 import requests
 
 from common import DEFAULT_TIMEOUT_SECONDS, RUNS_DIR, WORKBENCH_ROOT, allowed_urls, command_for, is_allowed_url, load_yaml, run_command, utc_stamp, write_json
+from scope_validation import validate_scope
 
 # Configuration zone: execution limits and output locations for all profiles.
 DEFAULT_PROFILE_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_SECONDS
@@ -243,8 +244,27 @@ def main() -> int:
     parser.add_argument("scope", type=Path)
     parser.add_argument("--profile", choices=["source", "web-baseline", "api"], required=True)
     parser.add_argument("--hexstrike-status", default="optional-not-requested")
+    parser.add_argument("--validate-only", action="store_true", help="validate TARGET.yaml without starting a profile")
     args = parser.parse_args()
     scope = load_yaml(args.scope)
+    # Relative local paths are always relative to the repository, not the terminal's current directory.
+    for key in ("source_root",):
+        value = str(scope.get(key, "")).strip()
+        if value and not Path(value).expanduser().is_absolute():
+            scope[key] = str(WORKBENCH_ROOT / value)
+    auth = scope.get("auth") if isinstance(scope.get("auth"), dict) else {}
+    headers_file = str(auth.get("headers_file", "")).strip()
+    if headers_file and not Path(headers_file).expanduser().is_absolute():
+        auth["headers_file"] = str(WORKBENCH_ROOT / headers_file)
+        scope["auth"] = auth
+    errors = validate_scope(scope, args.profile)
+    if errors:
+        for item in errors:
+            print(f"{item.field}: {item.message}", file=sys.stderr)
+        return 2
+    if args.validate_only:
+        print(json.dumps({"scope": str(args.scope), "profile": args.profile, "status": "valid"}, ensure_ascii=False))
+        return 0
     settings = load_yaml(WORKBENCH_ROOT / "config" / "defaults.yaml")
     run_dir = RUNS_DIR / f"{utc_stamp()}-{str(scope.get('name', 'project')).lower()}-{args.profile}"
     for directory in (run_dir / "raw", run_dir / "sarif", run_dir / "logs", run_dir / "evidence"):

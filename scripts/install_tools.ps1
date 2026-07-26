@@ -104,8 +104,8 @@ if ($InstallZap) {
 
 $PythonTools = Join-Path $BinDirectory 'python-tools'
 if (-not (Test-Path -LiteralPath (Join-Path $PythonTools 'Scripts\python.exe'))) { & $PythonExecutable -m venv $PythonTools }
-& (Join-Path $PythonTools 'Scripts\python.exe') -m pip install --upgrade pip 'semgrep==1.171.0' 'PyYAML==6.0.3'
-& $PythonExecutable -m pip install --upgrade 'PyYAML==6.0.3'
+& (Join-Path $PythonTools 'Scripts\python.exe') -m pip install --upgrade pip 'semgrep==1.171.0'
+& $PythonExecutable -m pip install --upgrade -r (Join-Path $WorkbenchRoot 'requirements-runner.txt')
 
 Write-Host 'Installed Web vulnerability mining toolchain:'
 Get-ChildItem -LiteralPath $BinDirectory -Recurse -File | Where-Object { $_.Name -match '^(trivy|gitleaks|nuclei|pd-httpx|katana|codeql|semgrep|zap)\.(exe|bat)$' } | Select-Object FullName
