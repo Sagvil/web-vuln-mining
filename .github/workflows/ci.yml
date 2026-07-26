@@ -1,0 +1,21 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  validate:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Python
+        shell: bash
+        run: python -m compileall scripts hexstrike
+      - name: Validate lock files and adapter layout
+        shell: bash
+        run: python tests/test_repository.py

@@ -1,0 +1,23 @@
+# Generated toolchains, scans, local settings, and secrets never enter Git.
+bin/
+cache/
+runs/
+evidence/
+sarif/
+logs/
+backups/
+.venv/
+**/__pycache__/
+**/.hypothesis/
+**/.schemathesis/
+config/local.*
+config/*.local.yaml
+config/*.local.json
+.env
+.env.*
+*.log
+*.pem
+*.key
+*.ppk
+scripts/organize_jws.ps1
+fixtures/**/.git/

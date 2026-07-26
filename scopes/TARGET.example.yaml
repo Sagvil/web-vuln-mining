@@ -1,0 +1,23 @@
+# Configuration zone: copy this file to scopes/<project>.yaml and replace placeholders.
+name: PROJECT
+source_root: ./PROJECT
+base_urls:
+  - https://TARGET/
+openapi: []
+include_hosts:
+  - TARGET
+exclude_paths:
+  - /logout
+  - /signout
+rate_limit: 5
+crawl_budget:
+  max_depth: 3
+  max_pages: 300
+profiles:
+  - source
+  - web-baseline
+codeql:
+  languages: [javascript, python]
+  build_command: ""
+auth:
+  headers_file: ""

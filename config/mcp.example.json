@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "hexstrike-ai": {
+      "command": "${WEB_VULN_MINING_PYTHON}",
+      "args": ["${WEB_VULN_MINING_HEXSTRIKE_BRIDGE}"],
+      "timeout": 300
+    }
+  }
+}

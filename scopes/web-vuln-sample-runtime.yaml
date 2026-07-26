@@ -1,0 +1,23 @@
+# Configuration zone: loopback-only target used to verify Web/API profile orchestration.
+name: web-vuln-sample-runtime
+source_root: fixtures/web-vuln-sample
+base_urls:
+  - http://127.0.0.1:18080/
+openapi:
+  - http://127.0.0.1:18080/openapi.json
+include_hosts:
+  - 127.0.0.1
+exclude_paths:
+  - /logout
+rate_limit: 2
+crawl_budget:
+  max_depth: 2
+  max_pages: 20
+profiles:
+  - web-baseline
+  - api
+codeql:
+  languages: [python]
+  build_command: ""
+auth:
+  headers_file: ""

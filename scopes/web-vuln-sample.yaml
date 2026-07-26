@@ -1,0 +1,19 @@
+# Configuration zone: local source-only validation fixture.
+name: web-vuln-sample
+source_root: fixtures/web-vuln-sample
+base_urls: []
+openapi: []
+include_hosts: []
+exclude_paths: []
+rate_limit: 1
+crawl_budget:
+  max_depth: 1
+  max_pages: 1
+profiles:
+  - source
+codeql:
+  # The fixture validates the Python CodeQL path; the runner supports multiple languages per project.
+  languages: [python]
+  build_command: ""
+auth:
+  headers_file: ""

@@ -1,0 +1,76 @@
+rules:
+  - id: python-sqli-string-format
+    languages: [python]
+    severity: ERROR
+    message: SQL query is assembled with interpolation; use a parameterized query API.
+    metadata:
+      category: security
+      vulnerability: SQL injection
+    patterns:
+      - pattern-either:
+          - pattern: $CURSOR.execute($QUERY % $VALUE)
+          - pattern: $CURSOR.execute(f"...{...}...")
+  - id: javascript-dom-xss-innerhtml
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Assignment to innerHTML requires a trusted and encoded value.
+    metadata:
+      category: security
+      vulnerability: cross-site scripting
+    pattern: $ELEMENT.innerHTML = $VALUE
+  - id: javascript-open-redirect-location
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Redirect destination must be allowlisted before assigning location.
+    metadata:
+      category: security
+      vulnerability: open redirect
+    pattern-either:
+      - pattern: window.location = $DESTINATION
+      - pattern: location.href = $DESTINATION
+  - id: python-ssrf-user-url
+    languages: [python]
+    severity: WARNING
+    message: User-influenced URL passed to an HTTP client requires host allowlisting.
+    metadata:
+      category: security
+      vulnerability: server-side request forgery
+    pattern-either:
+      - pattern: requests.get($URL, ...)
+      - pattern: requests.post($URL, ...)
+  - id: python-path-join-user-input
+    languages: [python]
+    severity: WARNING
+    message: Filesystem path includes a variable; validate it stays below the intended root.
+    metadata:
+      category: security
+      vulnerability: path traversal
+    pattern: os.path.join($ROOT, $INPUT, ...)
+  - id: python-orm-raw-query
+    languages: [python]
+    severity: ERROR
+    message: Raw ORM query input requires parameters or a validated query builder.
+    metadata:
+      category: security
+      vulnerability: SQL injection
+    pattern-either:
+      - pattern: $QUERYSET.raw($QUERY, ...)
+      - pattern: $MODEL.objects.raw($QUERY, ...)
+  - id: python-dangerous-template-string
+    languages: [python]
+    severity: WARNING
+    message: Rendering a dynamically constructed template can create server-side template injection.
+    metadata:
+      category: security
+      vulnerability: server-side template injection
+    pattern-either:
+      - pattern: render_template_string($TEMPLATE, ...)
+      - pattern: flask.render_template_string($TEMPLATE, ...)
+  - id: python-upload-save-without-validation
+    languages: [python]
+    severity: WARNING
+    message: File upload save requires extension, MIME, size, and storage-path validation.
+    metadata:
+      category: security
+      vulnerability: unrestricted file upload
+    pattern: $FILE.save($DESTINATION, ...)

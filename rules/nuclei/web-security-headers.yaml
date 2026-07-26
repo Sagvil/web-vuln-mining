@@ -1,0 +1,21 @@
+id: local-web-security-headers
+
+info:
+  name: Local Web Security Headers Baseline
+  author: web-vuln-mining
+  severity: info
+  description: Records missing browser hardening headers as a review candidate.
+  tags: misconfig,headers,local-regression
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+    matchers-condition: or
+    matchers:
+      - type: dsl
+        dsl:
+          - "!contains(to_lower(all_headers), 'content-security-policy:')"
+      - type: dsl
+        dsl:
+          - "!contains(to_lower(all_headers), 'x-content-type-options: nosniff')"

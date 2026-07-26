@@ -1,0 +1,3 @@
+name: api
+description: OpenAPI or GraphQL property tests plus passive ZAP API import.
+tools: [schemathesis, zap-api-passive]

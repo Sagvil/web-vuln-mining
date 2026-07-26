@@ -1,0 +1,7 @@
+# Local runtime overrides. Copy to config/local.runtime.yaml; this file is ignored by Git.
+# data_root: directory containing downloaded binaries and Python environments.
+data_root: ""
+# python: interpreter that runs workbench scripts; empty selects the current interpreter.
+python: ""
+# hexstrike_bridge: optional local bridge path. Empty leaves HexStrike as unavailable/optional.
+hexstrike_bridge: ""

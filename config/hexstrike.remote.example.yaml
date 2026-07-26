@@ -1,0 +1,14 @@
+# HexStrike remote deployment configuration. Copy to hexstrike.remote.local.yaml and replace placeholders.
+# ssh_host / ssh_port / ssh_user: remote Ubuntu or Debian SSH endpoint.
+ssh_host: HOST
+ssh_port: PORT
+ssh_user: USER
+# identity_file / known_hosts_file: local SSH credential and host-verification files; never commit them.
+identity_file: PATH_TO_SSH_KEY
+known_hosts_file: PATH_TO_KNOWN_HOSTS
+# remote_root: private remote installation directory.
+remote_root: /opt/web-vuln-mining/hexstrike
+# service_user: Linux account owning the service. It must have sudo rights for systemd service installation.
+service_user: HEXSTRIKE_USER
+# policy_bind: loopback-only service binding.
+policy_bind: 127.0.0.1:8888

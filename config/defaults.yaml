@@ -1,0 +1,17 @@
+# Web vulnerability mining defaults. Values are consumed by scripts/run_profile.py.
+# workspace: optional display-only override; empty derives the repository root.
+workspace: ""
+tool_timeout_seconds: 900
+zap:
+  host: 127.0.0.1
+  port: 8090
+  startup_timeout_seconds: 90
+  spider_timeout_seconds: 300
+  enabled: true
+profiles:
+  source:
+    tools: [gitleaks, trivy, semgrep, codeql]
+  web-baseline:
+    tools: [pd-httpx, katana, nuclei, zap-passive]
+  api:
+    tools: [schemathesis, zap-api-passive]

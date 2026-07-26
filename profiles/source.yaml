@@ -1,0 +1,3 @@
+name: source
+description: Git history, dependency, SAST, and CodeQL analysis for a local Web source tree.
+tools: [gitleaks, trivy, semgrep, codeql]
