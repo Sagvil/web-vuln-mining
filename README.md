@@ -1,6 +1,33 @@
 # Web Vulnerability Mining Workbench
 
-This workbench is limited to Web applications and Web APIs. It coordinates source review, HTTP inventory, route crawling, template-driven checks, passive DAST, and OpenAPI property tests. It does not run host, port, cloud, wireless, or operating-system scanners.
+[中文文档](README.zh-CN.md)
+
+## Goal
+
+This project provides a portable, version-locked local workbench for Web applications and Web APIs. It focuses on SQL injection, XSS, IDOR, authentication and authorization issues, SSRF, uploads, path traversal, redirects, dependency risks, and API input-validation defects. Host, port, cloud, wireless, and operating-system scanning are outside the project scope.
+
+## How it works
+
+1. A `TARGET.yaml` manifest defines the source tree, exact Web/API scope, exclusions, request rate, and crawl budget.
+2. The bootstrapper installs pinned tools into a user-owned data directory and verifies release hashes.
+3. A selected profile runs source analysis, Web baseline discovery, or schema-driven API tests.
+4. Raw outputs, SARIF, request evidence, normalized findings, and a Markdown report are saved under one immutable run directory.
+5. HexStrike is an optional, independent remote policy/audit and recheck component; `LOCAL_TOOL_STATUS` and `HEXSTRIKE_STATUS` remain separate.
+
+## Required projects and runtime environment
+
+| Category | Requirement | Purpose |
+| --- | --- | --- |
+| Operating system | Windows 10/11 x64, Ubuntu/Debian x64, or macOS with Homebrew | Bootstrap platform |
+| Prerequisites | Git, Python 3.11+, Java 17, `uv`/`uvx`, OpenSSH client, `curl`, `tar`, and `unzip` | Repository, Python tools, ZAP, Schemathesis, SSH integration, archive handling |
+| Package manager | Windows: `winget`; Linux: `apt`; macOS: `brew` | Installs prerequisites automatically |
+| Source profile | [Gitleaks](https://github.com/gitleaks/gitleaks), [Trivy](https://github.com/aquasecurity/trivy), [Semgrep](https://github.com/semgrep/semgrep), [CodeQL](https://github.com/github/codeql) | Secrets, dependencies, IaC, rules, and data-flow analysis |
+| Web profile | [ProjectDiscovery httpx](https://github.com/projectdiscovery/httpx), [Katana](https://github.com/projectdiscovery/katana), [Nuclei](https://github.com/projectdiscovery/nuclei), [OWASP ZAP](https://www.zaproxy.org/) | HTTP inventory, route discovery, local templates, and passive DAST |
+| API profile | [Schemathesis](https://github.com/schemathesis/schemathesis), OWASP ZAP | OpenAPI/GraphQL property tests and passive API inspection |
+| Optional agents | Codex, [Hermes](https://github.com/NousResearch/hermes-agent), [OpenClaw](https://github.com/openclaw/openclaw) | Skill-based orchestration |
+| Optional policy service | Linux host with Python 3, systemd, SSH access, and `sudo` | HexStrike remote policy/audit deployment |
+
+The platform lock files in `config/tool-lock.windows.json` and `config/tool-lock.linux.json` define the supported tool versions. The bootstrapper installs and validates them; Docker, Go, Kali, and system/network scanners are not required.
 
 ## Install
 
