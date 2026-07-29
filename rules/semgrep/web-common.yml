@@ -74,3 +74,71 @@ rules:
       category: security
       vulnerability: unrestricted file upload
     pattern: $FILE.save($DESTINATION, ...)
+  - id: python-request-to-sql-execute-taint
+    languages: [python]
+    mode: taint
+    severity: ERROR
+    message: Request-controlled data reaches a SQL execution API; use parameterized queries.
+    metadata:
+      category: security
+      vulnerability: SQL injection
+      cwe: CWE-89
+    pattern-sources:
+      - pattern-either:
+          - pattern: request.args.get(...)
+          - pattern: request.form.get(...)
+          - pattern: request.json.get(...)
+    pattern-sinks:
+      - pattern: $CURSOR.execute($QUERY, ...)
+  - id: python-request-to-http-client-taint
+    languages: [python]
+    mode: taint
+    severity: WARNING
+    message: Request-controlled data reaches an HTTP client; enforce an outbound host allowlist.
+    metadata:
+      category: security
+      vulnerability: server-side request forgery
+      cwe: CWE-918
+    pattern-sources:
+      - pattern-either:
+          - pattern: request.args.get(...)
+          - pattern: request.form.get(...)
+          - pattern: request.json.get(...)
+    pattern-sinks:
+      - pattern-either:
+          - pattern: requests.get($URL, ...)
+          - pattern: requests.post($URL, ...)
+  - id: python-request-to-template-string-taint
+    languages: [python]
+    mode: taint
+    severity: ERROR
+    message: Request-controlled data reaches dynamic template rendering.
+    metadata:
+      category: security
+      vulnerability: server-side template injection
+      cwe: CWE-1336
+    pattern-sources:
+      - pattern-either:
+          - pattern: request.args.get(...)
+          - pattern: request.form.get(...)
+          - pattern: request.json.get(...)
+    pattern-sinks:
+      - pattern-either:
+          - pattern: render_template_string($TEMPLATE, ...)
+          - pattern: flask.render_template_string($TEMPLATE, ...)
+  - id: javascript-location-to-innerhtml-taint
+    languages: [javascript, typescript]
+    mode: taint
+    severity: WARNING
+    message: Location-controlled data reaches innerHTML; sanitize before DOM insertion.
+    metadata:
+      category: security
+      vulnerability: cross-site scripting
+      cwe: CWE-79
+    pattern-sources:
+      - pattern-either:
+          - pattern: window.location.search
+          - pattern: location.search
+          - pattern: new URLSearchParams(window.location.search).get(...)
+    pattern-sinks:
+      - pattern: $ELEMENT.innerHTML = $VALUE

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -64,8 +65,12 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def platform_lock_path() -> Path:
-    """Select the required platform lock; unsupported or incomplete clones fail clearly."""
-    name = "tool-lock.windows.json" if os.name == "nt" else "tool-lock.linux.json"
+    """Select the architecture-specific tool lock for the current host."""
+    if os.name == "nt":
+        name = "tool-lock.windows.json"
+    else:
+        machine = platform.machine().lower()
+        name = "tool-lock.linux-arm64.json" if machine in {"aarch64", "arm64"} else "tool-lock.linux.json"
     candidate = WORKBENCH_ROOT / "config" / name
     if not candidate.is_file():
         raise RuntimeError(f"Missing platform lock: {candidate}")
@@ -89,6 +94,16 @@ def tool_path(name: str) -> Path | None:
             return discovered
     legacy = WORKBENCH_ROOT / executable
     return legacy if legacy.exists() else None
+
+
+def tool_disabled_reason(name: str) -> str | None:
+    """Return a platform-disable explanation for a declared tool, if any."""
+    record = load_json(platform_lock_path()).get("tools", {}).get(name, {})
+    if isinstance(record, dict) and record.get("kind") == "platform-disabled":
+        replacement = str(record.get("replacement", "")).strip()
+        reason = str(record.get("reason", "platform-disabled")).strip()
+        return f"{reason} Replacement: {replacement}." if replacement else reason
+    return None
 
 
 def command_for(name: str) -> list[str] | None:

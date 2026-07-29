@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 
 import requests
 
-from common import DEFAULT_TIMEOUT_SECONDS, RUNS_DIR, WORKBENCH_ROOT, allowed_urls, command_for, is_allowed_url, load_yaml, run_command, utc_stamp, write_json
+from common import DEFAULT_TIMEOUT_SECONDS, RUNS_DIR, WORKBENCH_ROOT, allowed_urls, command_for, is_allowed_url, load_yaml, run_command, tool_disabled_reason, utc_stamp, write_json
 from scope_validation import validate_scope
 
 # Configuration zone: execution limits and output locations for all profiles.
@@ -39,7 +39,7 @@ def _append_status(statuses: list[dict[str, Any]], tool: str, record: dict[str, 
 def _missing(tool: str, statuses: list[dict[str, Any]]) -> bool:
     if command_for(tool):
         return False
-    statuses.append({"tool": tool, "status": "skipped", "reason": "tool not installed"})
+    statuses.append({"tool": tool, "status": "skipped", "reason": tool_disabled_reason(tool) or "tool not installed"})
     return True
 
 

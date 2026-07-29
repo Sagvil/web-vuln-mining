@@ -18,9 +18,9 @@ This project provides a portable, version-locked local workbench for Web applica
 
 | Category | Requirement | Purpose |
 | --- | --- | --- |
-| Operating system | Windows 10/11 x64 or Ubuntu/Debian x64 | Bootstrap platform |
-| Prerequisites | Git, Python 3.11+, Java 17, `uv`/`uvx`, OpenSSH client, `curl`, `tar`, and `unzip` | Repository, Python tools, ZAP, Schemathesis, SSH integration, archive handling |
-| Package manager | Windows: `winget`; Ubuntu/Debian: `apt` | Installs prerequisites automatically |
+| Operating system | Windows 10/11 x64, Ubuntu/Debian x64, or Ubuntu/Debian ARM64 | Bootstrap platform |
+| Prerequisites | Git, Python 3.11+, Java 17, OpenSSH client, `curl`, `tar`, and `unzip` | Repository, Python tools, ZAP, SSH integration, archive handling |
+| Package manager | Windows: `winget`; Ubuntu/Debian x64: `apt`; Ubuntu/Debian ARM64: none | ARM64 bootstrap is user-space |
 | Source profile | [Gitleaks](https://github.com/gitleaks/gitleaks), [Trivy](https://github.com/aquasecurity/trivy), [Semgrep](https://github.com/semgrep/semgrep), [CodeQL](https://github.com/github/codeql) | Secrets, dependencies, IaC, rules, and data-flow analysis |
 | Web profile | [ProjectDiscovery httpx](https://github.com/projectdiscovery/httpx), [Katana](https://github.com/projectdiscovery/katana), [Nuclei](https://github.com/projectdiscovery/nuclei), [OWASP ZAP](https://www.zaproxy.org/) | HTTP inventory, route discovery, local templates, and passive DAST |
 | API profile | [Schemathesis](https://github.com/schemathesis/schemathesis), OWASP ZAP | OpenAPI/GraphQL property tests and passive API inspection |
@@ -29,7 +29,7 @@ This project provides a portable, version-locked local workbench for Web applica
 | Optional agents | Codex, [Hermes](https://github.com/NousResearch/hermes-agent), [OpenClaw](https://github.com/openclaw/openclaw) | Skill-based orchestration |
 | Optional policy service | Linux host with Python 3, systemd, SSH access, and `sudo` | HexStrike remote policy/audit deployment |
 
-The platform lock files in `config/tool-lock.windows.json` and `config/tool-lock.linux.json` define the supported tool versions. The bootstrapper installs and validates them; Docker, Go, Kali, and system/network scanners are not required.
+The platform lock files in `config/tool-lock.windows.json`, `config/tool-lock.linux.json`, and `config/tool-lock.linux-arm64.json` define the supported tool versions. ARM64 installs use a user-owned Python environment and do not require `sudo`; native release assets are verified against their release checksum manifests and missing assets fall back to a locked Go source build. CodeQL is platform-disabled on Linux ARM64 and is replaced by local Semgrep taint rules; no AMD64 emulation is used.
 
 ## Install
 
@@ -49,7 +49,7 @@ export WEB_VULN_MINING_ROOT="$PWD"
 ./bootstrap/install.sh --profile default --install-codex-skill
 ```
 
-The installer installs all twelve pinned tools, verifies hashes, creates an installation state file, and runs preflight. Use `--dry-run` before an installation. On an existing clone, `python scripts/preflight.py --repair --json` explicitly repairs missing or damaged tools; preflight without `--repair` remains read-only.
+The installer installs all twelve pinned tools, verifies hashes, creates an installation state file, and runs preflight. On ARM64 it uses the existing Python, Java, Docker, and Go runtimes without `apt` or `sudo`. Use `--dry-run` before an installation. On an existing clone, `python scripts/preflight.py --repair --json` explicitly repairs missing or damaged tools; preflight without `--repair` remains read-only.
 
 ## Agent adapters
 

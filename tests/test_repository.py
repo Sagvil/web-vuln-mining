@@ -8,12 +8,16 @@ from pathlib import Path
 REQUIRED_TOOLS = {"semgrep", "codeql", "trivy", "gitleaks", "pd-httpx", "katana", "nuclei", "zap", "schemathesis", "dalfox", "sqlmap", "ffuf"}
 # ============================================================================
 ROOT = Path(__file__).resolve().parents[1]
-for lock_name in ("tool-lock.windows.json", "tool-lock.linux.json"):
+for lock_name in ("tool-lock.windows.json", "tool-lock.linux.json", "tool-lock.linux-arm64.json"):
     lock = json.loads((ROOT / "config" / lock_name).read_text(encoding="utf-8"))
-    assert REQUIRED_TOOLS <= set(lock["tools"]), lock_name
+    expected = REQUIRED_TOOLS - ({"codeql"} if lock_name == "tool-lock.linux-arm64.json" else set())
+    assert expected <= set(lock["tools"]), lock_name
+    if lock_name == "tool-lock.linux-arm64.json":
+        assert lock["tools"]["codeql"].get("kind") == "platform-disabled"
     for name in ("dalfox", "sqlmap", "ffuf"):
         record = lock["tools"][name]
-        assert record.get("url") and len(record.get("sha256", "")) == 64 and record.get("executable"), (lock_name, name)
+        assert record.get("executable"), (lock_name, name)
+        assert (record.get("url") and len(record.get("sha256", "")) == 64) or (record.get("asset") and record.get("checksum_url")), (lock_name, name)
 for adapter in ("codex", "hermes", "openclaw"):
     assert (ROOT / "adapters" / adapter / "SKILL.md").is_file(), adapter
 for profile in ("verify-xss", "verify-sqli", "content-discovery"):

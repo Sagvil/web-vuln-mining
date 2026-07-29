@@ -28,6 +28,30 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# ARM64 hosts use a user-space installer: no apt, sudo, or system Python writes.
+if [[ "$(uname -m)" == "aarch64" || "$(uname -m)" == "arm64" ]]; then
+  arm_args=()
+  [[ -n "$ONLY_TOOLS" ]] && arm_args+=(--only-tools "$ONLY_TOOLS")
+  [[ "$REPAIR" = 1 ]] && arm_args+=(--repair)
+  if [[ "$DRY_RUN" = 1 ]]; then
+    printf '[dry-run] python3 %q ' "$ROOT/bootstrap/install_arm64.py"; printf '%q ' "${arm_args[@]}"; echo
+  else
+    WEB_VULN_MINING_DATA="$DATA_ROOT" python3 "$ROOT/bootstrap/install_arm64.py" "${arm_args[@]}"
+    if [[ "$REPAIR" != 1 || -z "$ONLY_TOOLS" ]]; then
+      WEB_VULN_MINING_DATA="$DATA_ROOT" python3 "$ROOT/scripts/preflight.py" --json --check-policy | tee "$DATA_ROOT/preflight-latest.json"
+    fi
+  fi
+  if [[ "$INSTALL_CODEX_SKILL" = 1 ]]; then
+    mkdir -p "$HOME/.codex/skills/web-vuln-mining"
+    cp "$ROOT/adapters/codex/SKILL.md" "$HOME/.codex/skills/web-vuln-mining/SKILL.md"
+  fi
+  if [[ "$WITH_HEXSTRIKE" = 1 ]]; then
+    [[ -n "$HEXSTRIKE_CONFIG" ]] || { echo '--with-hexstrike requires --hexstrike-config' >&2; exit 2; }
+    [[ "$DRY_RUN" = 1 ]] && echo "[dry-run] deploy HexStrike using $HEXSTRIKE_CONFIG" || python3 "$ROOT/scripts/hexstrike_deploy.py" --config "$HEXSTRIKE_CONFIG"
+  fi
+  exit 0
+fi
+
 run() { if [[ "$DRY_RUN" = 1 ]]; then printf '[dry-run] '; printf '%q ' "$@"; echo; else "$@"; fi; }
 selected() { [[ -z "$ONLY_TOOLS" || ",$ONLY_TOOLS," == *",$1,"* ]]; }
 selected_any() { local item; for item in "$@"; do selected "$item" && return 0; done; return 1; }

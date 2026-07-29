@@ -28,9 +28,9 @@ HexStrike 是独立的可选远端策略、审计和复核组件。即使远端�
 
 | 分类 | 要求 | 用途 |
 | --- | --- | --- |
-| 操作系统 | Windows 10/11 x64、Ubuntu/Debian x64 | 工作台运行平台 |
-| 基础环境 | Git、Python 3.11+、Java 17、`uv`/`uvx`、OpenSSH Client、`curl`、`tar`、`unzip` | 拉取仓库、运行 Python 工具与脚本、运行 ZAP、执行 SSH 集成和解压工具包 |
-| 包管理器 | Windows 使用 `winget`；Ubuntu/Debian 使用 `apt` | Bootstrap 自动补齐基础环境 |
+| 操作系统 | Windows 10/11 x64、Ubuntu/Debian x64、Ubuntu/Debian ARM64 | 工作台运行平台 |
+| 基础环境 | Git、Python 3.11+、Java 17、OpenSSH Client、`curl`、`tar`、`unzip` | 拉取仓库、运行 Python 工具与脚本、运行 ZAP、执行 SSH 集成和解压工具包 |
+| 包管理器 | Windows 使用 `winget`；Ubuntu/Debian x64 使用 `apt`；Ubuntu/Debian ARM64 无需包管理器 | ARM64 Bootstrap 在用户目录运行 |
 | 源码审计 | [Gitleaks](https://github.com/gitleaks/gitleaks)、[Trivy](https://github.com/aquasecurity/trivy)、[Semgrep](https://github.com/semgrep/semgrep)、[CodeQL](https://github.com/github/codeql) | 密钥、依赖/IaC、规则扫描和跨文件数据流分析 |
 | Web 基线 | [ProjectDiscovery httpx](https://github.com/projectdiscovery/httpx)、[Katana](https://github.com/projectdiscovery/katana)、[Nuclei](https://github.com/projectdiscovery/nuclei)、[OWASP ZAP](https://www.zaproxy.org/) | HTTP 指纹、路由/JS 爬取、本地模板检查和被动 DAST |
 | API 测试 | [Schemathesis](https://github.com/schemathesis/schemathesis)、OWASP ZAP | OpenAPI/GraphQL 性质测试、契约偏差和 API 被动检查 |
@@ -39,7 +39,7 @@ HexStrike 是独立的可选远端策略、审计和复核组件。即使远端�
 | 可选 Agent | Codex、[Hermes](https://github.com/NousResearch/hermes-agent)、[OpenClaw](https://github.com/openclaw/openclaw) | 通过 Skill 调度工作台 |
 | 可选 HexStrike 服务 | 具备 Python 3、systemd、SSH 和 `sudo` 的 Linux 主机 | 部署远端策略和审计服务 |
 
-工具精确版本由 `config/tool-lock.windows.json` 和 `config/tool-lock.linux.json` 锁定。安装器会下载、校验并登记工具状态；不需要 Docker、Go、Kali，也不会安装系统/网络扫描器。
+工具精确版本由 `config/tool-lock.windows.json`、`config/tool-lock.linux.json` 和 `config/tool-lock.linux-arm64.json` 锁定。ARM64 安装使用用户目录下的 Python 环境，不需要 `sudo`；原生发布包通过其发布校验清单验证，缺少 ARM64 资产时从锁定 Go tag 构建。Linux ARM64 上的 CodeQL 标记为平台禁用，并由本地 Semgrep taint 规则替代；不使用 AMD64 模拟执行。
 
 ## 安装
 
@@ -61,7 +61,7 @@ export WEB_VULN_MINING_ROOT="$PWD"
 ./bootstrap/install.sh --profile default --install-codex-skill
 ```
 
-安装器会自动安装基础依赖和全部 12 个固定版本工具、校验哈希、写入安装状态并运行预检。已有克隆可显式执行 `python scripts/preflight.py --repair --json` 修复缺失、损坏或版本不符的工具；不带 `--repair` 的预检保持只读。
+安装器会安装全部 12 个固定版本工具、校验哈希、写入安装状态并运行预检。ARM64 使用现有的 Python、Java、Docker 与 Go 运行时，不执行 `apt` 或 `sudo`。已有克隆可显式执行 `python scripts/preflight.py --repair --json` 修复缺失、损坏或版本不符的工具；不带 `--repair` 的预检保持只读。
 
 ```powershell
 .\bootstrap\install.ps1 -DryRun

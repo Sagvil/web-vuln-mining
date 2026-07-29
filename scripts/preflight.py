@@ -31,7 +31,7 @@ PROFILE_TOOLS = {
 VERSION_ARGS = {
     "semgrep": ["--version"], "codeql": ["version"], "trivy": ["--version"], "gitleaks": ["version"],
     "pd-httpx": ["-version"], "katana": ["-version"], "nuclei": ["-version"], "dalfox": ["--version"],
-    "sqlmap": ["--batch", "--version"], "ffuf": ["-V"],
+    "schemathesis": ["--version"], "sqlmap": ["--batch", "--version"], "ffuf": ["-V"],
 }
 # ============================================================================
 
@@ -72,13 +72,17 @@ def actual_version(name: str, command: list[str] | None, expected: str) -> str |
     return next((line for line in lines if expected in line), lines[0] if lines else None)
 
 
-def inspect_tools(required: list[str], lock: dict[str, object]) -> tuple[list[dict[str, object]], list[str], list[str]]:
+def inspect_tools(required: list[str], lock: dict[str, object]) -> tuple[list[dict[str, object]], list[str], list[str], list[dict[str, object]]]:
     tools: list[dict[str, object]] = []
     missing: list[str] = []
     repair_targets: list[str] = []
+    disabled: list[dict[str, object]] = []
     records = lock.get("tools", {}) if isinstance(lock.get("tools"), dict) else {}
     for name in required:
         record = records[name]
+        if record.get("kind") == "platform-disabled":
+            disabled.append({"name": name, "status": "platform-disabled", "reason": record.get("reason", "platform-disabled"), "replacement": record.get("replacement")})
+            continue
         command = command_for(name)
         present = command is not None and (name == "schemathesis" or all(Path(part).exists() for part in command if part.lower().endswith((".exe", ".py", ".bat", ".sh"))))
         locked_version = str(record["version"])
@@ -96,7 +100,7 @@ def inspect_tools(required: list[str], lock: dict[str, object]) -> tuple[list[di
             item["actual_version"] = found_version
             if found_version is not None and str(item["locked_version"]) not in found_version:
                 repair_targets.append(str(item["name"]))
-    return tools, missing, repair_targets
+    return tools, missing, repair_targets, disabled
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -113,7 +117,7 @@ def main() -> int:
     args = parser.parse_args()
     lock = load_json(platform_lock_path())
     required = list(dict.fromkeys(tool for profile in args.required_profiles for tool in PROFILE_TOOLS[profile])) if args.required_profiles else CORE_TOOLS
-    tools, missing, repair_targets = inspect_tools(required, lock)
+    tools, missing, repair_targets, disabled = inspect_tools(required, lock)
     bridge = policy_bridge()
     preliminary_dependencies = runtime_dependencies(bridge if args.check_policy else None)
     preliminary_prerequisites = [{"name": name, "present": shutil.which(name) is not None} for name in ("git", "java", "ssh")]
@@ -124,13 +128,13 @@ def main() -> int:
     repair_targets = list(dict.fromkeys(repair_targets))
     repair = repair_toolchain(repair_targets) if args.repair and repair_targets else {"status": "not-needed", "tools": []} if args.repair else None
     if args.repair and repair_targets and repair and repair["status"] == "completed":
-        tools, missing, remaining = inspect_tools(required, lock)
+        tools, missing, remaining, disabled = inspect_tools(required, lock)
         repair["remaining"] = remaining
     dependencies = runtime_dependencies(bridge if args.check_policy else None)
     missing_dependencies = [str(item["name"]) for item in dependencies if not item["present"]]
     prerequisites = [{"name": name, "present": shutil.which(name) is not None} for name in ("git", "java", "ssh")]
     missing_prerequisites = [str(item["name"]) for item in prerequisites if not item["present"] and item["name"] in required_prerequisites]
-    result = {"workbench": str(WORKBENCH_ROOT), "data_root": str(data_root()), "lock": str(platform_lock_path()), "required_profiles": args.required_profiles or "all", "tools": tools, "missing": missing, "runtime_dependencies": dependencies, "missing_runtime_dependencies": missing_dependencies, "system_prerequisites": prerequisites, "missing_system_prerequisites": missing_prerequisites, "hexstrike_policy_bridge": bridge.exists() if args.check_policy and bridge else False if args.check_policy else None, "repair": repair}
+    result = {"workbench": str(WORKBENCH_ROOT), "data_root": str(data_root()), "platform": lock.get("platform", "unknown"), "lock": str(platform_lock_path()), "required_profiles": args.required_profiles or "all", "tools": tools, "platform_disabled": disabled, "missing": missing, "runtime_dependencies": dependencies, "missing_runtime_dependencies": missing_dependencies, "system_prerequisites": prerequisites, "missing_system_prerequisites": missing_prerequisites, "hexstrike_policy_bridge": bridge.exists() if args.check_policy and bridge else False if args.check_policy else None, "repair": repair}
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
