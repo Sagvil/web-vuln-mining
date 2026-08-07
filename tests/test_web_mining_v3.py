@@ -250,6 +250,16 @@ out.write_text('<nmaprun/>', encoding='utf-8')
             self.assertTrue((hermes_home / 'skills' / 'pentest' / 'web-mining' / 'SKILL.md').is_file())
             self.assertTrue((hermes_home / 'skills' / 'unrelated' / 'SKILL.md').is_file())
 
+    def test_sync_empty_disabled_list_remains_yaml_list(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temp:
+            temp = Path(raw_temp)
+            hermes_home, policy_root, wiki_root = temp / 'hermes', temp / 'policy', temp / 'wiki'
+            (hermes_home / 'config.yaml').parent.mkdir(parents=True)
+            (hermes_home / 'config.yaml').write_text('skills:\n  disabled:\n    - pentest-orchestrator\n', encoding='utf-8')
+            sync_hermes.apply(hermes_home, policy_root, wiki_root, False)
+            config = yaml.safe_load((hermes_home / 'config.yaml').read_text(encoding='utf-8'))
+            self.assertEqual(config['skills']['disabled'], [])
+
 
 if __name__ == '__main__':
     unittest.main()

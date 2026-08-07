@@ -86,6 +86,9 @@ def remove_disabled_skill(config_path: Path, skill: str) -> None:
     disabled_indent: int | None = None
     found_skills = False
     found_disabled = False
+    disabled_line_index: int | None = None
+    disabled_key_indent: int | None = None
+    disabled_has_items = False
     for line in lines:
         stripped = line.strip()
         indent = len(line) - len(line.lstrip(' '))
@@ -95,13 +98,19 @@ def remove_disabled_skill(config_path: Path, skill: str) -> None:
             skills_indent, disabled_indent = None, None
         if skills_indent is not None and stripped == 'disabled:' and indent > skills_indent:
             disabled_indent, found_disabled = indent, True
+            disabled_key_indent = indent
             output.append(line)
+            disabled_line_index = len(output) - 1
             continue
         if disabled_indent is not None and indent <= disabled_indent and stripped and not line.lstrip().startswith('#'):
             disabled_indent = None
-        if disabled_indent is not None and stripped == f'- {skill}':
-            continue
+        if disabled_indent is not None and stripped.startswith('- '):
+            if stripped == f'- {skill}':
+                continue
+            disabled_has_items = True
         output.append(line)
+    if found_disabled and disabled_line_index is not None and disabled_key_indent is not None and not disabled_has_items:
+        output[disabled_line_index] = f"{' ' * disabled_key_indent}disabled: []\n"
     if not found_skills:
         if output and not output[-1].endswith('\n'):
             output[-1] += '\n'
