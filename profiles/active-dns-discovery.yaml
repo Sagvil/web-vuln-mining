@@ -1,0 +1,8 @@
+# Nmap DNS-brute is an explicit candidate-discovery profile. It never starts HTTP,
+# port, directory, or vulnerability scans for returned names.
+name: active-dns-discovery
+description: Bounded Nmap dns-brute discovery of candidate subdomains under explicitly declared roots.
+tools: [nmap-dns-brute]
+requires: [active_dns_discovery.roots, active_dns_discovery.wordlist]
+network_scope: dns-only
+candidate_only: true

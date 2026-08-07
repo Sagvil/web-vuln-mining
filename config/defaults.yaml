@@ -21,3 +21,6 @@ profiles:
     tools: [sqlmap]
   content-discovery:
     tools: [ffuf]
+
+  active-dns-discovery:
+    tools: [nmap-dns-brute]

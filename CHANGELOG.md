@@ -1,5 +1,12 @@
 # Changelog
 
+## 3.0.0 - 2026-08-07
+
+- Restored the two-layer `pentest-orchestrator` and `web-mining` architecture with GitHub Tap-ready flat skills.
+- Added explicit DNS-only `active-dns-discovery`, candidate inventory normalization, and report separation.
+- Converted HexStrike into optional audit/review support with durable job states and terminal artifacts.
+- Added Hermes synchronization, backup/rollback, flat-skill migration, and registry reconciliation.
+
 ## 0.2.0 - 2026-07-26
 
 - Added pinned Dalfox, sqlmap, and ffuf installation on Windows and Ubuntu/Debian.

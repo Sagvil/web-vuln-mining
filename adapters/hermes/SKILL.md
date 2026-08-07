@@ -1,13 +1,14 @@
 ---
-name: web-vuln-mining
-description: Portable Web/API vulnerability-mining workbench launcher.
-version: 0.1.0
+name: web-mining
+description: Hermes compatibility entry for scoped local Web/API mining; canonical publishable skills live under skills/.
+version: 3.0.0
 platforms: [windows, linux]
 metadata:
   hermes:
-    requires:
-      bins: [python]
-      env: [WEB_VULN_MINING_ROOT]
+    config:
+      - key: WEB_VULN_MINING_ROOT
+        env: [WEB_VULN_MINING_ROOT]
 ---
-# Web Vulnerability Mining
-On a new clone run `python $WEB_VULN_MINING_ROOT/scripts/preflight.py --repair --json --check-policy`; later checks stay read-only. Limit work to exact hosts and budgets in TARGET.yaml. `verify-xss` and `verify-sqli` require an explicit candidate file; `content-discovery` requires a bounded wordlist. HexStrike is an independent policy/audit component.
+# Web Mining
+
+Use the flat `web-mining` skill for local profile execution and `pentest-orchestrator` for routing. Define exact Web/API scope and budgets in `scopes/PROJECT.yaml`; preserve each generated run directory and treat automated output as a candidate. `active-dns-discovery` is explicit, DNS-only candidate collection. HexStrike is optional review/audit support and never blocks local Profiles.

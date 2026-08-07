@@ -38,7 +38,7 @@ def main() -> int:
     common = ["-p", port, "-i", str(Path(str(c["identity_file"])).expanduser()), "-o", f"UserKnownHostsFile={Path(str(c['known_hosts_file'])).expanduser()}", "-o", "StrictHostKeyChecking=yes"]
     remote_root, service_user = shlex.quote(root), shlex.quote(str(c["service_user"]))
     checked([ssh, *common, target, f"python3 --version && sudo mkdir -p {remote_root}/app {remote_root}/logs && sudo chown -R {service_user}:{service_user} {remote_root} && test -d /run/systemd/system"])
-    for name in ("hexstrike_policy_service.py", "hexstrike_gate.py", "hexstrike_mcp.py"):
+    for name in ("hexstrike_policy_service.py", "hexstrike_gate.py", "hexstrike_mcp.py", "hexstrike_policy_mcp.py"):
         checked([scp, *common, str(WORKBENCH_ROOT / "hexstrike" / name), f"{target}:/tmp/{name}"])
         checked([ssh, *common, target, f"sudo install -m 0755 -o {service_user} -g {service_user} /tmp/{name} {remote_root}/app/{name}"])
     unit = f"""[Unit]

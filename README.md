@@ -4,7 +4,7 @@
 
 ## Goal
 
-This project provides a portable, version-locked local workbench for Web applications and Web APIs. It focuses on SQL injection, XSS, IDOR, authentication and authorization issues, SSRF, uploads, path traversal, redirects, dependency risks, and API input-validation defects. Host, port, cloud, wireless, and operating-system scanning are outside the project scope.
+This project provides a portable, version-locked local workbench for Web applications and Web APIs. It focuses on SQL injection, XSS, IDOR, authentication and authorization issues, SSRF, uploads, path traversal, redirects, dependency risks, and API input-validation defects. Host, port, cloud, wireless, and operating-system scanning are outside the project scope. The explicit `active-dns-discovery` Profile is a DNS-only candidate inventory exception; it does not perform port or HTTP scanning.
 
 ## How it works
 
@@ -59,7 +59,7 @@ python .\scripts\install_agent.py hermes
 python .\scripts\install_agent.py openclaw
 ```
 
-Hermes can also install from Git: `hermes skills tap add https://github.com/OWNER/web-vuln-mining.git` then `hermes skills install web-vuln-mining`. OpenClaw can install the root Skill with `openclaw skills install git:OWNER/web-vuln-mining@main --global`.
+Hermes can also install the publishable flat skills from Git: `hermes skills tap add OWNER/web-vuln-mining`, then `hermes skills install web-mining` and `hermes skills install pentest-orchestrator`. OpenClaw can install the root Skill with `openclaw skills install git:OWNER/web-vuln-mining@main --global`.
 
 ## Configuration zone
 
@@ -99,6 +99,7 @@ python "$workbench\scripts\create_report.py" <RUN_DIR>
 - `verify-xss`: Dalfox against an explicit in-scope candidate URL file supplied by `--input`.
 - `verify-sqli`: sqlmap at level 1/risk 1 against an explicit in-scope candidate URL file supplied by `--input`.
 - `content-discovery`: ffuf against a bounded copy of `--wordlist`, without recursion.
+- `active-dns-discovery`: explicit Nmap `dns-brute` candidate inventory. It requires `active_dns_discovery` in TARGET.yaml and the system `nmap` binary; it never promotes returned names into HTTP scope.
 
 The three second-batch tools are installed by default but never execute in `source`, `web-baseline`, or `api`. Their profiles must be declared by TARGET.yaml and invoked explicitly:
 
@@ -106,6 +107,20 @@ The three second-batch tools are installed by default but never execute in `sour
 python .\scripts\run_profile.py $scope --profile verify-xss --input .\candidates\xss-urls.txt
 python .\scripts\run_profile.py $scope --profile verify-sqli --input .\candidates\sqli-urls.txt
 python .\scripts\run_profile.py $scope --profile content-discovery --wordlist .\wordlists\paths.txt --max-requests 300
+```
+
+## DNS Candidate Discovery
+
+`active-dns-discovery` is disabled unless the manifest declares it. It runs `nmap -sn -n -Pn --script dns-brute` against the explicitly listed parent roots, writes XML, bounded wordlist copies, logs, and `asset-candidates.json`, then stops. DNS candidates are inventory evidence only. Add a reviewed hostname and URL to a new `include_hosts`/`base_urls` manifest before follow-up Web work.
+
+```yaml
+profiles: [active-dns-discovery]
+active_dns_discovery:
+  roots: [example.test]
+  wordlist: wordlists/dns-subdomains.txt
+  max_words: 10000
+  threads: 20
+  max_candidates: 5000
 ```
 
 ## HexStrike

@@ -27,3 +27,7 @@ for scope, profile in (("web-vuln-sample.yaml", "source"), ("web-vuln-sample-run
     assert result.returncode == 0, result.stderr
 assert (ROOT / "README.md").is_file() and (ROOT / "README.zh-CN.md").is_file()
 print("repository validation passed")
+
+for skill in ('web-mining', 'pentest-orchestrator', 'pentest-hexstrike-executor'):
+    assert (ROOT / 'skills' / skill / 'SKILL.md').is_file(), skill
+assert (ROOT / 'skills.sh.json').is_file()

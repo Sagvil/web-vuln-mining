@@ -1,0 +1,9 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    {
+      "title": "Scoped Security Assessment v3",
+      "skills": ["pentest-orchestrator", "web-mining", "pentest-hexstrike-executor"]
+    }
+  ]
+}

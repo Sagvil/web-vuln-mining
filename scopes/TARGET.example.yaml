@@ -20,6 +20,7 @@ profiles:
   - verify-xss
   - verify-sqli
   - content-discovery
+  - active-dns-discovery
 codeql:
   languages: [javascript, python]
   build_command: ""
@@ -29,3 +30,11 @@ content_discovery:
   # Only the first max_requests lines of --wordlist are used; ffuf does not recurse by default.
   max_requests: 300
   match_statuses: [200, 204, 301, 302, 307, 401, 403]
+
+active_dns_discovery:
+  # DNS-only candidate discovery; each root must be an include_hosts value or its parent domain.
+  roots: [TARGET]
+  wordlist: wordlists/dns-subdomains.txt
+  max_words: 10000
+  threads: 20
+  max_candidates: 5000

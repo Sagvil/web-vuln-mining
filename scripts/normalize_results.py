@@ -143,6 +143,29 @@ def _sqlmap_index(path: Path, findings: dict[str, dict[str, Any]]) -> None:
                 _add(findings, {"tool": "sqlmap", "rule": "sqlmap.confirmed-sqli", "severity": "error", "location": str(candidate.get("url", "")), "parameter": parameter, "status": "reproduced", "message": "sqlmap recorded a confirmed injectable parameter", "evidence": str(log), "reproduction_command": candidate.get("command", [])})
 
 
+
+def _asset_candidates(path: Path, candidates: dict[str, dict[str, Any]]) -> None:
+    """Load DNS candidates as inventory evidence, never as vulnerability findings."""
+    try:
+        payload = json.loads(path.read_text(encoding='utf-8', errors='replace'))
+    except json.JSONDecodeError:
+        return
+    values = payload.get('candidates', []) if isinstance(payload, dict) else []
+    for item in values if isinstance(values, list) else []:
+        if not isinstance(item, dict):
+            continue
+        hostname = str(item.get('hostname', '')).strip().lower().rstrip('.')
+        if not hostname:
+            continue
+        candidates.setdefault(hostname, {
+            'hostname': hostname,
+            'addresses': sorted({str(value) for value in item.get('addresses', []) if str(value)}),
+            'root': str(item.get('root', '')),
+            'source': str(item.get('source', 'nmap-dns-brute')),
+            'status': 'candidate',
+            'evidence': str(path),
+        })
+
 def _sarif_level(severity: str) -> str:
     value = severity.lower()
     if any(token in value for token in ("error", "high", "critical")):
@@ -186,6 +209,9 @@ def main() -> int:
     parser.add_argument("run_dir", type=Path)
     args = parser.parse_args()
     findings: dict[str, dict[str, Any]] = {}
+    asset_candidates: dict[str, dict[str, Any]] = {}
+    for path in (args.run_dir / 'raw').glob('asset-candidates.json'):
+        _asset_candidates(path, asset_candidates)
     for path in (args.run_dir / "sarif").glob("*.sarif"):
         if path.name == NORMALIZED_SARIF_NAME:
             continue
@@ -204,9 +230,9 @@ def main() -> int:
         _sqlmap_index(path, findings)
     manifest = json.loads((args.run_dir / "run-manifest.json").read_text(encoding="utf-8"))
     normalized = list(findings.values())
-    summary = {"run_id": manifest["run_id"], "profile": manifest["profile"], "local_tool_status": manifest["local_tool_status"], "hexstrike_status": manifest["hexstrike_status"], "findings": normalized, "counts": {"candidate": sum(item.get("status") == "candidate" for item in normalized), "reproduced": sum(item.get("status") == "reproduced" for item in normalized), "excluded": sum(item.get("status") == "excluded" for item in normalized)}}
+    summary = {"run_id": manifest["run_id"], "profile": manifest["profile"], "local_tool_status": manifest["local_tool_status"], "hexstrike_status": manifest["hexstrike_status"], "findings": normalized, "asset_candidates": list(asset_candidates.values()), "counts": {"candidate": sum(item.get("status") == "candidate" for item in normalized), "reproduced": sum(item.get("status") == "reproduced" for item in normalized), "excluded": sum(item.get("status") == "excluded" for item in normalized), "asset_candidate": len(asset_candidates)}}
     write_json(args.run_dir / "summary.json", summary)
-    write_json(args.run_dir / "evidence" / EVIDENCE_INDEX_NAME, {"run_id": manifest["run_id"], "findings": normalized})
+    write_json(args.run_dir / "evidence" / EVIDENCE_INDEX_NAME, {"run_id": manifest["run_id"], "findings": normalized, "asset_candidates": list(asset_candidates.values())})
     write_json(args.run_dir / "sarif" / NORMALIZED_SARIF_NAME, _normalized_sarif(normalized))
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0

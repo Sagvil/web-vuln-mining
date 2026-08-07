@@ -1,0 +1,27 @@
+# Configuration zone: validation-only sample for active DNS candidate discovery.
+name: active-dns-sample
+source_root: fixtures/web-vuln-sample
+base_urls:
+  - https://www.example.test/
+openapi: []
+include_hosts:
+  - www.example.test
+exclude_paths:
+  - /logout
+rate_limit: 2
+crawl_budget:
+  max_depth: 1
+  max_pages: 10
+profiles:
+  - active-dns-discovery
+active_dns_discovery:
+  roots: [example.test]
+  wordlist: wordlists/dns-subdomains.txt
+  max_words: 100
+  threads: 2
+  max_candidates: 100
+codeql:
+  languages: [python]
+  build_command: ''
+auth:
+  headers_file: ''

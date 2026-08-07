@@ -6,7 +6,7 @@
 
 本项目提供一个可移植、版本锁定的本地 Web / Web API 漏洞挖掘工作台，面向 SQL 注入、XSS、IDOR、认证与授权缺陷、SSRF、文件上传、路径遍历、开放重定向、依赖风险与 API 参数校验问题。
 
-项目边界仅覆盖网站、HTTP 服务、OpenAPI、GraphQL 与 Web 源码项目；不包含主机、端口、云资源、无线网络或操作系统侧扫描。
+项目边界仅覆盖网站、HTTP 服务、OpenAPI、GraphQL 与 Web 源码项目；不包含主机、端口、云资源、无线网络或操作系统侧扫描。`active-dns-discovery` 是显式启用的 DNS 候选资产发现例外：只执行 DNS-brute，不执行端口或 HTTP 扫描。
 
 ## 原理与流程
 
@@ -113,6 +113,7 @@ python .\scripts\create_report.py <RUN_DIR>
 | `verify-xss` | Dalfox | `--input` 提供的范围内 XSS 候选 URL |
 | `verify-sqli` | sqlmap（level 1/risk 1） | `--input` 提供的范围内 SQL 注入候选 URL |
 | `content-discovery` | ffuf | `--wordlist` 的受限副本，不递归 |
+| `active-dns-discovery` | Nmap dns-brute | 显式根域下的 DNS 候选资产；不自动扩大 Web 范围 |
 
 第二批工具默认安装，但不会随 `source`、`web-baseline` 或 `api` 自动执行。必须先在 TARGET.yaml 声明相应 Profile，再显式运行：
 
@@ -120,6 +121,20 @@ python .\scripts\create_report.py <RUN_DIR>
 python .\scripts\run_profile.py $scope --profile verify-xss --input .\candidates\xss-urls.txt
 python .\scripts\run_profile.py $scope --profile verify-sqli --input .\candidates\sqli-urls.txt
 python .\scripts\run_profile.py $scope --profile content-discovery --wordlist .\wordlists\paths.txt --max-requests 300
+```
+
+## DNS 候选资产发现
+
+`active-dns-discovery` 默认关闭，必须在 TARGET.yaml 的 `profiles` 与 `active_dns_discovery` 中显式声明。它执行 `nmap -sn -n -Pn --script dns-brute`，保存 XML、截断词表、日志和 `asset-candidates.json`，随后结束。候选资产仅用于清单；只有将经审阅的主机名和 URL 写入新的 `include_hosts`、`base_urls` 与 Profile 声明后，才进入后续 Web 工作。
+
+```yaml
+profiles: [active-dns-discovery]
+active_dns_discovery:
+  roots: [example.test]
+  wordlist: wordlists/dns-subdomains.txt
+  max_words: 10000
+  threads: 20
+  max_candidates: 5000
 ```
 
 ## Codex、Hermes 与 OpenClaw
@@ -133,8 +148,9 @@ python .\scripts\install_agent.py openclaw
 Hermes 也可从 Git 安装：
 
 ```bash
-hermes skills tap add https://github.com/OWNER/web-vuln-mining.git
-hermes skills install web-vuln-mining
+hermes skills tap add OWNER/web-vuln-mining
+hermes skills install web-mining
+hermes skills install pentest-orchestrator
 ```
 
 OpenClaw：

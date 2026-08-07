@@ -8,6 +8,7 @@ import subprocess
 import sys
 import time
 import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -22,6 +23,20 @@ DEFAULT_PROFILE_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_SECONDS
 ZAP_API_KEY = ""  # Empty by design: ZAP is bound only to loopback by this runner.
 MAX_DISCOVERED_URLS = 5000
 MAX_VERIFY_TARGETS = 20  # Maximum explicit candidate URLs processed by one verification run.
+DALFOX_WORKERS = 1  # Serial XSS verification to avoid request bursts.
+DALFOX_MAX_CONCURRENT_TARGETS = 1  # Process one candidate target at a time.
+DALFOX_SCAN_TIMEOUT_SECONDS = 300  # Maximum payload-injection time per target.
+DALFOX_SKIP_MINING = True  # Use only explicitly supplied parameters; do not mine extra names.
+SQLMAP_TECHNIQUES = "BE"  # Boolean- and error-based checks; excludes time delays and stacked queries.
+SQLMAP_TIMEOUT_SECONDS = 15  # Per-request timeout for bounded SQL verification.
+SQLMAP_RETRIES = 0  # Do not amplify transient failures with retries.
+# ACTIVE_DNS_NMAP_TIMEOUT_SECONDS: upper bound for one DNS-only Nmap invocation.
+ACTIVE_DNS_NMAP_TIMEOUT_SECONDS = 900
+# ACTIVE_DNS_*: hard execution caps mirroring scope_validation.py. Scope files
+# select values within these limits; candidates never become Web targets here.
+ACTIVE_DNS_MAX_WORDS = 10_000
+ACTIVE_DNS_MAX_THREADS = 20
+ACTIVE_DNS_MAX_CANDIDATES = 5_000
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -267,7 +282,20 @@ def _verify_xss(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, A
     targets.write_text("\n".join(urls) + "\n", encoding="utf-8")
     output = raw / "dalfox.jsonl"
     headers = _header_values(scope)
-    command = command_for("dalfox") + ["scan", str(targets), "--format", "jsonl", "--output", str(output), "--silence"] + [element for header in headers for element in ("-H", header)]
+    rate = str(max(1, int(scope.get("rate_limit", 5))))
+    command = command_for("dalfox") + [
+        "scan", str(targets),
+        "--format", "jsonl",
+        "--output", str(output),
+        "--silence",
+        "--workers", str(DALFOX_WORKERS),
+        "--max-concurrent-targets", str(DALFOX_MAX_CONCURRENT_TARGETS),
+        "--rate-limit", rate,
+        "--scan-timeout", str(DALFOX_SCAN_TIMEOUT_SECONDS),
+    ]
+    if DALFOX_SKIP_MINING:
+        command.append("--skip-mining")
+    command += [element for header in headers for element in ("-H", header)]
     _append_status(statuses, "dalfox", run_command(command, logs / "dalfox.json", acceptable={0, 1}), output)
 
 
@@ -286,7 +314,18 @@ def _verify_sqli(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, 
     delay = f"{max(0.2, 1 / max(1, int(scope.get('rate_limit', 5)))):.2f}"
     for position, url in enumerate(urls):
         output_dir = raw / "sqlmap" / str(position)
-        command = command_for("sqlmap") + ["-u", url, "--batch", "--level", "1", "--risk", "1", "--threads", "1", "--delay", delay, "--output-dir", str(output_dir)]
+        command = command_for("sqlmap") + [
+            "-u", url,
+            "--batch",
+            "--level", "1",
+            "--risk", "1",
+            "--threads", "1",
+            "--delay", delay,
+            "--technique", SQLMAP_TECHNIQUES,
+            "--timeout", str(SQLMAP_TIMEOUT_SECONDS),
+            "--retries", str(SQLMAP_RETRIES),
+            "--output-dir", str(output_dir),
+        ]
         record = run_command(command, logs / f"sqlmap-{position}.json", acceptable={0, 1})
         _append_status(statuses, f"sqlmap-{position}", record, output_dir)
         index.append({"url": url, "output_dir": str(output_dir), "command": command, "status": record["status"]})
@@ -315,14 +354,94 @@ def _content_discovery(scope: dict[str, Any], run_dir: Path, statuses: list[dict
         _append_status(statuses, f"ffuf-{position}", run_command(command, logs / f"ffuf-{position}.json", acceptable={0, 1}), output)
 
 
+
+def _dns_candidates_from_xml(path: Path, root_domain: str) -> list[dict[str, Any]]:
+    """Extract DNS-brute hostnames from Nmap XML without treating them as Web targets."""
+    if not path.is_file():
+        return []
+    try:
+        document = ET.parse(path).getroot()
+    except (ET.ParseError, OSError):
+        return []
+    candidates: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    expected = root_domain.lower().rstrip('.')
+    for host in document.findall('.//host'):
+        addresses = sorted({str(item.get('addr', '')).strip() for item in host.findall('address') if item.get('addr')})
+        for hostname in host.findall('.//hostname'):
+            name = str(hostname.get('name', '')).strip().lower().rstrip('.')
+            if not name or name in seen or not (name == expected or name.endswith('.' + expected)):
+                continue
+            seen.add(name)
+            candidates.append({'hostname': name, 'addresses': addresses, 'root': expected, 'source': 'nmap-dns-brute', 'status': 'candidate', 'evidence': str(path)})
+    return candidates
+
+
+def _active_dns_discovery(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Run bounded Nmap dns-brute and persist candidates without expanding Web scope."""
+    config = scope.get('active_dns_discovery') if isinstance(scope.get('active_dns_discovery'), dict) else {}
+    raw, logs = run_dir / 'raw', run_dir / 'logs'
+    roots = [str(item).strip().lower().rstrip('.') for item in config.get('roots', []) if str(item).strip()]
+    configured_wordlist = Path(str(config.get('wordlist', '')).strip()).expanduser()
+    wordlist = configured_wordlist if configured_wordlist.is_absolute() else WORKBENCH_ROOT / configured_wordlist
+    max_words = max(1, min(int(config.get('max_words', ACTIVE_DNS_MAX_WORDS)), ACTIVE_DNS_MAX_WORDS))
+    threads = max(1, min(int(config.get('threads', ACTIVE_DNS_MAX_THREADS)), ACTIVE_DNS_MAX_THREADS))
+    max_candidates = max(1, min(int(config.get('max_candidates', ACTIVE_DNS_MAX_CANDIDATES)), ACTIVE_DNS_MAX_CANDIDATES))
+    output = raw / 'asset-candidates.json'
+    nmap = shutil.which('nmap')
+    if not nmap:
+        reason = 'nmap system dependency is not installed'
+        statuses.append({'tool': 'nmap-dns-brute', 'status': 'failed', 'reason': reason})
+        write_json(logs / 'nmap-preflight.json', {'command': [], 'returncode': None, 'status': 'failed', 'reason': reason})
+        write_json(output, {'schema_version': 1, 'profile': 'active-dns-discovery', 'candidates': []})
+        return []
+    if not wordlist.is_file():
+        reason = f'DNS wordlist not found: {wordlist}'
+        statuses.append({'tool': 'nmap-dns-brute', 'status': 'failed', 'reason': reason})
+        write_json(logs / 'nmap-preflight.json', {'command': [], 'returncode': None, 'status': 'failed', 'reason': reason})
+        write_json(output, {'schema_version': 1, 'profile': 'active-dns-discovery', 'candidates': []})
+        return []
+    labels: list[str] = []
+    for line in wordlist.read_text(encoding='utf-8', errors='replace').splitlines():
+        label = line.split('#', 1)[0].strip().lower()
+        if not label or label in labels or not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,62}', label):
+            continue
+        labels.append(label)
+        if len(labels) >= max_words:
+            break
+    if not labels:
+        reason = 'DNS wordlist has no usable labels'
+        statuses.append({'tool': 'nmap-dns-brute', 'status': 'failed', 'reason': reason})
+        write_json(logs / 'nmap-preflight.json', {'command': [], 'returncode': None, 'status': 'failed', 'reason': reason})
+        write_json(output, {'schema_version': 1, 'profile': 'active-dns-discovery', 'candidates': []})
+        return []
+    candidates: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for index, root_domain in enumerate(roots):
+        safe_name = re.sub(r'[^a-z0-9.-]+', '-', root_domain).strip('-') or str(index)
+        bounded = raw / f'dns-wordlist-{safe_name}.txt'
+        bounded.write_text('\n'.join(labels) + '\n', encoding='utf-8')
+        xml_output = raw / f'nmap-{safe_name}.xml'
+        command = [nmap, '-sn', '-n', '-Pn', '--script', 'dns-brute', '--script-args', f'dns-brute.domain={root_domain},dns-brute.hostlist={bounded},dns-brute.threads={threads}', '-oX', str(xml_output), root_domain]
+        record = run_command(command, logs / f'nmap-{safe_name}.json', timeout=ACTIVE_DNS_NMAP_TIMEOUT_SECONDS, acceptable={0})
+        _append_status(statuses, f'nmap-dns-brute-{safe_name}', record, xml_output)
+        for candidate in _dns_candidates_from_xml(xml_output, root_domain):
+            hostname = str(candidate['hostname'])
+            if hostname not in seen and len(candidates) < max_candidates:
+                seen.add(hostname)
+                candidates.append(candidate)
+    payload = {'schema_version': 1, 'profile': 'active-dns-discovery', 'candidate_only': True, 'candidates': candidates}
+    write_json(output, payload)
+    return candidates
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("scope", type=Path)
-    parser.add_argument("--profile", choices=["source", "web-baseline", "api", "verify-xss", "verify-sqli", "content-discovery"], required=True)
+    parser.add_argument("--profile", choices=["source", "web-baseline", "api", "verify-xss", "verify-sqli", "content-discovery", "active-dns-discovery"], required=True)
     parser.add_argument("--hexstrike-status", default="optional-not-requested")
     parser.add_argument("--validate-only", action="store_true", help="validate TARGET.yaml without starting a profile")
     parser.add_argument("--input", type=Path, help="explicit in-scope candidate URL file for verify-xss or verify-sqli")
-    parser.add_argument("--wordlist", type=Path, help="wordlist used only by content-discovery")
+    parser.add_argument("--wordlist", type=Path, help="wordlist used only by content-discovery; DNS uses active_dns_discovery.wordlist")
     parser.add_argument("--max-requests", type=int, default=None, help="maximum wordlist entries consumed by content-discovery; overrides TARGET.yaml")
     args = parser.parse_args()
     scope = load_yaml(args.scope)
@@ -356,12 +475,15 @@ def main() -> int:
         directory.mkdir(parents=True, exist_ok=True)
     shutil.copy2(args.scope, run_dir / "scope.yaml")
     statuses: list[dict[str, Any]] = []
+    asset_candidates: list[dict[str, Any]] = []
     if args.profile == "source":
         _source(scope, run_dir, statuses)
     elif args.profile == "web-baseline":
         _web(scope, run_dir, statuses, settings)
     elif args.profile == "api":
         _api(scope, run_dir, statuses, settings)
+    elif args.profile == "active-dns-discovery":
+        asset_candidates = _active_dns_discovery(scope, run_dir, statuses)
     else:
         candidate_file = args.input.expanduser() if args.input else None
         if candidate_file and not candidate_file.is_absolute():
@@ -376,7 +498,7 @@ def main() -> int:
         else:
             configured_limit = int(((scope.get("content_discovery") or {}).get("max_requests", 300)))
             _content_discovery(scope, run_dir, statuses, wordlist, max(1, min(args.max_requests if args.max_requests is not None else configured_limit, 10_000)))
-    manifest = {"schema_version": 1, "run_id": run_dir.name, "profile": args.profile, "scope": str(args.scope), "local_tool_status": statuses, "hexstrike_status": args.hexstrike_status}
+    manifest = {"schema_version": 1, "run_id": run_dir.name, "profile": args.profile, "scope": str(args.scope), "local_tool_status": statuses, "hexstrike_status": args.hexstrike_status, "asset_candidates": {"count": len(asset_candidates), "path": str(run_dir / "raw" / "asset-candidates.json") if args.profile == "active-dns-discovery" else None}}
     write_json(run_dir / "run-manifest.json", manifest)
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
     return 0 if not any(item.get("status") == "failed" for item in statuses) else 1
