@@ -8,6 +8,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import types
 import unittest
 
@@ -18,6 +19,10 @@ from unittest import mock
 # ============================ Configuration zone ============================
 # ROOT: repository under test; fixtures never contact a network target.
 ROOT = Path(__file__).resolve().parents[1]
+# DETACHED_WORKER_FIXTURE_DELAY_SECONDS: keeps the fixture worker alive after its caller exits.
+DETACHED_WORKER_FIXTURE_DELAY_SECONDS = 0.6
+# DETACHED_WORKER_FIXTURE_TIMEOUT_SECONDS: bounded wait for detached worker terminal artifacts.
+DETACHED_WORKER_FIXTURE_TIMEOUT_SECONDS = 5.0
 # ============================================================================
 
 sys.path.insert(0, str(ROOT / 'scripts'))
@@ -213,6 +218,95 @@ out.write_text('<nmaprun/>', encoding='utf-8')
             self.assertTrue(worker_status['success'])
             self.assertTrue(worker_status['integrity'])
             self.assertEqual(json.loads((worker_directory / 'job-state.json').read_text(encoding='utf-8'))['status'], 'completed')
+
+    def test_policy_detached_worker_survives_caller_exit(self) -> None:
+        """A real detached worker finishes after an interrupted fixture caller exits."""
+        with tempfile.TemporaryDirectory() as raw_temp:
+            temp = Path(raw_temp)
+            job_root, stub_root, bin_root = temp / 'jobs', temp / 'stub', temp / 'bin'
+            (stub_root / 'mcp' / 'server').mkdir(parents=True)
+            (stub_root / 'mcp' / '__init__.py').write_text('', encoding='utf-8')
+            (stub_root / 'mcp' / 'server' / '__init__.py').write_text('', encoding='utf-8')
+            (stub_root / 'mcp' / 'server' / 'fastmcp.py').write_text(
+                'class FastMCP:\n'
+                '    def __init__(self, *_args, **_kwargs):\n'
+                '        pass\n'
+                '    def tool(self, function=None):\n'
+                '        return function if function is not None else (lambda item: item)\n'
+                '    def run(self):\n'
+                '        return None\n',
+                encoding='utf-8',
+            )
+            bin_root.mkdir()
+            fake_nmap = bin_root / 'nmap'
+            fake_nmap.write_text(f'#!{sys.executable}\n', encoding='utf-8')
+            fake_nmap.chmod(fake_nmap.stat().st_mode | stat.S_IEXEC)
+            marker = temp / 'upstream-started'
+            fake_fastmcp = bin_root / 'fastmcp'
+            fake_fastmcp.write_text(
+                f'#!{sys.executable}\n'
+                'import os\n'
+                'from pathlib import Path\n'
+                'import time\n'
+                "Path(os.environ['DETACHED_WORKER_FIXTURE_MARKER']).write_text('started', encoding='utf-8')\n"
+                f'time.sleep({DETACHED_WORKER_FIXTURE_DELAY_SECONDS!r})\n'
+                "print('{}')\n",
+                encoding='utf-8',
+            )
+            fake_fastmcp.chmod(fake_fastmcp.stat().st_mode | stat.S_IEXEC)
+            job_id = 'HX-detached-caller-fixture'
+            caller = temp / 'interrupted-caller.py'
+            caller.write_text(
+                'import importlib.util\n'
+                'import os\n'
+                'from pathlib import Path\n\n'
+                "source = Path(os.environ['WEB_MINING_POLICY_SOURCE'])\n"
+                "spec = importlib.util.spec_from_file_location('policy_fixture_caller', source)\n"
+                'module = importlib.util.module_from_spec(spec)\n'
+                'assert spec and spec.loader\n'
+                'spec.loader.exec_module(module)\n'
+                "result = module.execute_capability('nmap_scan', arguments_json='{\"target\":\"example.test\",\"ports\":\"443\"}', mode='src', scope_roots='example.test', exact_targets='example.test', job_id=os.environ['DETACHED_WORKER_FIXTURE_JOB_ID'])\n"
+                '# Deliberately omit an MCP response and exit immediately, emulating caller loss.\n'
+                "os._exit(0 if result.get('status') == 'queued' else 2)\n",
+                encoding='utf-8',
+            )
+            env = os.environ.copy()
+            env.update({
+                'DETACHED_WORKER_FIXTURE_MARKER': str(marker),
+                'DETACHED_WORKER_FIXTURE_JOB_ID': job_id,
+                'HEXSTRIKE_API_URL': 'http://fixture.invalid',
+                'HEXSTRIKE_FASTMCP': str(fake_fastmcp),
+                'HEXSTRIKE_JOB_ROOT': str(job_root),
+                'HEXSTRIKE_PYTHON': sys.executable,
+                'HEXSTRIKE_TOOL_PATH': str(bin_root),
+                'HEXSTRIKE_UPSTREAM_MCP': str(temp / 'unused-upstream.py'),
+                'PYTHONPATH': str(stub_root) + os.pathsep + env.get('PYTHONPATH', ''),
+                'WEB_MINING_POLICY_SOURCE': str(ROOT / 'hexstrike' / 'hexstrike_policy_mcp.py'),
+            })
+            caller_process = subprocess.Popen([sys.executable, str(caller)], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            stdout, stderr = caller_process.communicate(timeout=DETACHED_WORKER_FIXTURE_TIMEOUT_SECONDS)
+            self.assertEqual(caller_process.returncode, 0, msg=stderr)
+            self.assertEqual(stdout, '')
+            directory = job_root / job_id
+            state_path = directory / 'job-state.json'
+            self.assertTrue((directory / 'request.json').is_file())
+            self.assertTrue(state_path.is_file())
+            initial_state = json.loads(state_path.read_text(encoding='utf-8'))
+            self.assertIn(initial_state['status'], {'queued', 'running'})
+            self.assertFalse((directory / 'result.json').exists())
+            deadline = time.monotonic() + DETACHED_WORKER_FIXTURE_TIMEOUT_SECONDS
+            while time.monotonic() < deadline and not (directory / 'result.json').is_file():
+                time.sleep(0.02)
+            self.assertTrue(marker.is_file())
+            self.assertTrue((directory / 'result.json').is_file())
+            terminal_state = json.loads(state_path.read_text(encoding='utf-8'))
+            self.assertNotEqual(terminal_state.get('worker_pid'), caller_process.pid)
+            module = self.policy_module()
+            module.JOB_ROOT = job_root
+            status = module.hexstrike_job_status(job_id)
+            self.assertTrue(status['success'])
+            self.assertTrue(status['integrity'])
+            self.assertEqual(status['status'], 'completed')
 
     def test_sync_apply_and_rollback_preserve_unrelated_runtime(self) -> None:
         with tempfile.TemporaryDirectory() as raw_temp:
