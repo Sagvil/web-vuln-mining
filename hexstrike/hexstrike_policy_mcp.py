@@ -412,162 +412,351 @@ def _atomic_json(path: Path, data: Any) -> None:
     ) as handle:
         json.dump(data, handle, ensure_ascii=False, indent=2, sort_keys=True)
         handle.write("\n")
-        temp_nameß[h‘éì¶»§q«^tH\ÚX‹œÚLMŠ
-BˆÚ]]›Ü[Šœ˜ˆŠH\È[™N‚ˆ›ÜˆÚ[šÈ[ˆ]\Š[X™Nˆ[™Kœ™XY
-L
-ˆL
-KˆˆŠN‚ˆYÙ\Ý\]JÚ[šÊBˆ™]\›ˆYÙ\Ýš^YÙ\Ý
+        temp_name = handle.name
+    os.replace(temp_name, path)
 
-B‚‚™YˆÜ™XYÚœÛÛŠ]ˆ]
-HOˆXÝÜÝ‹[žWN‚ˆžN‚ˆ˜[YHHœÛÛ‹›ØYÊ]œ™XYÝ^
-[˜ÛÙ[™ÏIÝ]‹N	ÊJBˆ™]\›ˆ˜[YHYˆ\Ú[œÝ[˜ÙJ˜[YKXÝ
-H[ÙHßBˆ^Ù\
-ÔÑ\œ›Ü‹œÛÛ‹’”ÓÓ‘XÛÙQ\œ›ÜŠN‚ˆ™]\›ˆßB‚‚™YˆÜÝ]WÜ]
-\™XÝÜžNˆ]
-HOˆ]‚ˆ™]\›ˆ\™XÝÜžHÈ“Ð—ÔÕUWÑ’SB‚‚™YˆÝÜš]WÜÝ]J\™XÝÜžNˆ]Ý]\ÎˆÝ‹
-Š™šY[Îˆ[žJHOˆXÝÜÝ‹[žWN‚ˆYˆÝ]\È›Ý[ˆÉÜ]Y]YY	Ë	Ü[›š[™ÉË
-•T“RSSÒ“Ð—ÔÕUTßN‚ˆ˜Z\ÙH˜[YQ\œ›ÜŠ‰Ú[˜[Y›ØˆÝ]\ÎˆÜÝ]\ßIÊBˆÝ]HHÜ™XYÚœÛÛŠÜÝ]WÜ]
-\™XÝÜžJJBˆÝ]K\]JšY[ÊBˆÝ]VÉÜØÚ[XWÝ™\œÚ[Û‰×HHBˆÝ]VÉÜÝ]\É×HHÝ]\ÂˆÝ]VÉÝ\]YØ]	×HH[YKœÝ™[YJ	ÉVKI[KIY	R‰SN‰TÖ‰Ë[YK™Û][YJ
-JBˆØ]ÛZX×ÚœÛÛŠÜÝ]WÜ]
-\™XÝÜžJKÝ]JBˆ™]\›ˆÝ]B‚‚™YˆÝ\Ý™X[WØÛÛ[X[™
-[Y[Ý]ˆ[
-HOˆÝŽ‚ˆˆˆ’ÙY\H\Ý™X[HÛY[[™˜\ÝPÔ[Y[Ý]YÙ]ÈY[XØ[ˆˆˆ‚ˆ™]\›ˆ	È	Ëš›Ú[ŠÚ^œ][ÝJ\
-H›Üˆ\[ˆ
-ÝŠVÕ’RÑWÔUÓŠKÝŠTÕ‘PSWÓPÔ
-K	ËK\Ù\™\‰ËÝŠVÕ’RÑWÐTWÕT“
-K	ËK][Y[Ý]	ËÝŠ[Y[Ý]
-JJB‚‚™YˆØØ[Ý\Ý™X[JØ\Xš[]NˆÝ‹\™Ý[Y[ÎˆX\[™ÖÜÝ‹[žWK[Y[Ý]ˆ[
-HOˆXÝÜÝ‹[žWN‚ˆÛÛ[X[™HÂˆTÕPÔÐ’S‹ˆ	ØØ[	Ëˆ	ËKXÛÛ[X[™	ËˆÝ\Ý™X[WØÛÛ[X[™
-[Y[Ý]
-Kˆ	ËK]\™Ù]	ËˆØ\Xš[]Kˆ	ËKZ[œ]ZœÛÛ‰ËˆœÛÛ‹™[\Ê\™Ý[Y[Ë[œÝ\™WØ\ØÚZOQ˜[ÙKÙ\\˜]ÜœÏJ	Ë	Ë	Î‰ÊJKˆ	ËKZœÛÛ‰Ëˆ	ËK][Y[Ý]	ËˆÝŠ[Y[Ý]
-KˆBˆÝ\YH[YK[YJ
-BˆÛÛ[X[™Ù[š\›Û›Y[HÜË™[š\›Û‹˜ÛÜJ
-BˆÛÛ[X[™Ù[š\›Û›Y[ÉÔU	×HHÓÓÔÑPTÒÔUˆžN‚ˆÛÛ\]YHÝXœ›ØÙ\ÜËœ[ŠÛÛ[X[™Ø\\™WÛÝ]]UYK^UYK[Y[Ý]][Y[Ý]
-ÈŒÚXÚÏQ˜[ÙK[XÛÛ[X[™Ù[š\›Û›Y[
-Bˆ^Ù\ÝXœ›ØÙ\ÜË•[Y[Ý]^\™Y\È^Î‚ˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ý[Y[Ý]	Ë	Ù\œ›Ü‰ÎˆÝŠ^ÊK	Ù^XÝ][Û—Ý[YIÎˆ[YK[YJ
-HHÝ\YBˆ\œÙYˆ[žHH›Û™BˆYˆÛÛ\]YœÝÝ]œÝš\
 
-N‚ˆžN‚ˆ\œÙYHœÛÛ‹›ØYÊÛÛ\]YœÝÝ]
-Bˆ^Ù\œÛÛ‹’”ÓÓ‘XÛÙQ\œ›ÜŽ‚ˆ\œÙYH›Û™Bˆ™]\›ˆÂˆ	ÜÝXØÙ\ÜÉÎˆÛÛ\]Yœ™]\›˜ÛÙHOH[™\œÙY\È›Ý›Û™Kˆ	ÜÝ]\ÉÎˆ	ØÛÛ\]Y	ÈYˆÛÛ\]Yœ™]\›˜ÛÙHOH[™\œÙY\È›Ý›Û™H[ÙH	Ù˜Z[Y	Ëˆ	Ü™]\›˜ÛÙIÎˆÛÛ\]Yœ™]\›˜ÛÙKˆ	Ù^XÝ][Û—Ý[YIÎˆ[YK[YJ
-HHÝ\Yˆ	Ü™\Ý[	Îˆ\œÙYˆ	ÜÝÝ]	ÎˆÛÛ\]YœÝÝ]ˆ	ÜÝ\œ‰ÎˆÛÛ\]YœÝ\œ‹ˆB‚‚™YˆÙš[˜[^™WÚ›ØŠ\™XÝÜžNˆ]™\]Y\ÝˆX\[™ÖÜÝ‹[žWK^XÝ][ÛŽˆX\[™ÖÜÝ‹[žWKÝ]\ÎˆÝŠHOˆXÝÜÝ‹[žWN‚ˆˆˆ•Üš]H\›Z[˜[\Y˜XÝÈ]ÛZXØ[H›Üˆ]™\žHXØÙ\Y›Ø‹ˆˆˆ‚ˆš[˜[ÜÝ]\ÈHÝ]\ÈYˆÝ]\È[ˆT“RSSÒ“Ð—ÔÕUTÈ[ÙH	Ù˜Z[Y	Âˆ™\Ý[Ü™XÛÜ™HÂˆ
-Š™XÝ
-™\]Y\Ý
-Kˆ	ØÛÛ\]YØ]	Îˆ[YKœÝ™[YJ	ÉVKI[KIY	R‰SN‰TÖ‰Ë[YK™Û][YJ
-JKˆ	ÜÝ]\ÉÎˆš[˜[ÜÝ]\Ëˆ	Ù^XÝ][Û‰ÎˆXÝ
-^XÝ][ÛŠKˆ	ØÛZ[WÜÝ]IÎˆ	ØØ[™Y]IËˆ	Ý™\šYšYY	Îˆ˜[ÙKˆBˆ™\Ý[Ü]H\™XÝÜžHÈ	Ü™\Ý[šœÛÛ‰ÂˆØ]ÛZX×ÚœÛÛŠ™\Ý[Ü]™\Ý[Ü™XÛÜ™
-Bˆ™\]Y\ÝÜ]H\™XÝÜžHÈ	Ü™\]Y\ÝšœÛÛ‰ÂˆÝ[\ÈHÉÜ™\]Y\ÝšœÛÛ‰ÎˆÜÚLMŠ™\]Y\ÝÜ]
-K	Ü™\Ý[šœÛÛ‰ÎˆÜÚLMŠ™\Ý[Ü]
-_BˆØ]ÛZX×ÚœÛÛŠ\™XÝÜžHÈ	ÔÒLM”ÕSTËšœÛÛ‰ËÝ[\ÊBˆÝÜš]WÜÝ]J\™XÝÜžKš[˜[ÜÝ]\ËÛÛ\]YØ]\™\Ý[Ü™XÛÜ™ÉØÛÛ\]YØ]	×JBˆ™]\›ˆ™\Ý[Ü™XÛÜ™‚‚™YˆÜ[—Ú›ØŠ›Ø—ÚYˆÝŠHOˆ[‚ˆˆˆ‘]XÚYÛÜšÙ\ˆ[ž\Ú[È[Ø^\ÈX]™\ÈH\›Z[˜[™\Ý[\Y˜XÝˆˆˆ‚ˆžN‚ˆ\™XÝÜžHHÚ›Ø—Ù\Š›Ø—ÚY
-Bˆ™\]Y\ÝHÜ™XYÚœÛÛŠ\™XÝÜžHÈ	Ü™\]Y\ÝšœÛÛ‰ÊBˆYˆ›Ý™\]Y\Ý‚ˆ™]\›ˆ‚ˆÝÜš]WÜÝ]J\™XÝÜžK	Ü[›š[™ÉËÝ\YØ]][YKœÝ™[YJ	ÉVKI[KIY	R‰SN‰TÖ‰Ë[YK™Û][YJ
-JKÛÜšÙ\—ÜY[ÜË™Ù]Y
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
-JBˆ[Y[Ý]HQT—ÕSQSÕUË™Ù]
-ÝŠ™\]Y\Ý™Ù]
-	ÝY\‰ÊJKQT—ÕSQSÕUÖÉÐI×JBˆ^XÝ][ÛˆHØØ[Ý\Ý™X[JÝŠ™\]Y\Ý™Ù]
-	ØØ\Xš[]IÊJK™\]Y\Ý™Ù]
-	Ø\™Ý[Y[ÉËßJK[Y[Ý]
-BˆÝ]\ÈHÝŠ^XÝ][Û‹™Ù]
-	ÜÝ]\ÉË	Ù˜Z[Y	ÊJBˆÙš[˜[^™WÚ›ØŠ\™XÝÜžK™\]Y\Ý^XÝ][Û‹Ý]\ÊBˆ™]\›ˆYˆÝ]\ÈOH	ØÛÛ\]Y	È[ÙHBˆ^Ù\˜\ÙQ^Ù\[Ûˆ\È^ÎˆÈÛÜšÙ\ˆ]\Ý™\Ù\™HH\›Z[˜[™XÛÜ™]™[ˆY\ˆ[ˆ[\›˜[\œ›Ü‹‚ˆžN‚ˆ\™XÝÜžHHÚ›Ø—Ù\Š›Ø—ÚY
-Bˆ™\]Y\ÝHÜ™XYÚœÛÛŠ\™XÝÜžHÈ	Ü™\]Y\ÝšœÛÛ‰ÊBˆYˆ™\]Y\Ý‚ˆÙš[˜[^™WÚ›ØŠ\™XÝÜžK™\]Y\ÝÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ù˜Z[Y	Ë	Ù\œ›Ü‰Îˆ™\Š^Ê_K	Ù˜Z[Y	ÊBˆ^Ù\˜\ÙQ^Ù\[ÛŽ‚ˆ\ÜÂˆ™]\›ˆB‚‚™YˆÝÛÜšÙ\—Ú\×Ø[]™JYˆ[žJHOˆ›ÛÛ‚ˆžN‚ˆ˜[YHH[
-Y
-BˆYˆ˜[YHH‚ˆ™]\›ˆ˜[ÙBˆÜËšÚ[
-˜[YK
-Bˆ™]\›ˆYBˆ^Ù\
-\Q\œ›Ü‹˜[YQ\œ›Ü‹›ØÙ\ÜÓÛÚÝ\\œ›ÜŠN‚ˆ™]\›ˆ˜[ÙBˆ^Ù\\›Z\ÜÚ[Û‘\œ›ÜŽ‚ˆ™]\›ˆYB‚‚™Yˆ^XÝ]WØØ\Xš[]JˆØ\Xš[]NˆÝ‹ˆ\™Ý[Y[×ÚœÛÛŽˆÝˆH	ÞßIËˆ[ÙNˆÝˆH	ÜÜ˜ÉËˆØÛÜWÜ›ÛÝÎˆÝˆH	ÉËˆ^XÝÝ\™Ù]ÎˆÝˆH	ÉËˆ›Ø—ÚYˆÝˆH	ÉËŠHOˆXÝÜÝ‹[žWN‚ˆˆˆ•˜[Y]K[œ]Y]YK[™\˜X›H™XÛÜ™Û™HÜ[Û˜[\Ý™X[HØ\Xš[]Kˆˆˆ‚ˆY\ˆHÐTP’SUWÕQT‹™Ù]
-Ø\Xš[]JBˆYˆY\ˆ›Ý[ˆÉÐIË	Ð‰Ë	ÐÉßN‚ˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ø›ØÚÙY	Ë	Ù\œ›Ü‰Îˆ	ØØ\Xš[]H\È›Ý^ÜÙY	ßBˆYˆ[ÙH›Ý[ˆSÕÑQÓSÑTÎ‚ˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ø›ØÚÙY	Ë	Ù\œ›Ü‰Îˆ	Ú[˜[Y\ÜÙ\ÜÛY[[ÙIßBˆYˆY\ˆOH	ÐÉÈ[™[ÙH›Ý[ˆÓÓ•PÕQÓSÑTÎ‚ˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ø›ØÚÙY	Ë	Ù\œ›Ü‰Îˆ	ÐË]Y\ˆØ\Xš[]H™\]Z\™\ÈÛÛ˜XÝYX‹ÜˆÝˆ[ÙIßBˆžN‚ˆ˜]×Ø\™Ý[Y[ÈHœÛÛ‹›ØYÊ\™Ý[Y[×ÚœÛÛˆÜˆ	ÞßIÊBˆYˆ›Ý\Ú[œÝ[˜ÙJ˜]×Ø\™Ý[Y[ËXÝ
-N‚ˆ˜Z\ÙH˜[YQ\œ›ÜŠ	Ø\™Ý[Y[×ÚœÛÛˆ]\ÝÛÛZ[ˆH”ÓÓˆØš™XÝ	ÊBˆ›ÛÝÈHÜ\œÙWÛ\Ý
-ØÛÜWÜ›ÛÝÊBˆ^XÝHÜ\œÙWÛ\Ý
-^XÝÝ\™Ù]ÊBˆYˆ›Ý›ÛÝÎ‚ˆ˜Z\ÙH˜[YQ\œ›ÜŠ	ÜØÛÜWÜ›ÛÝÈ\È™\]Z\™Y	ÊBˆ\™Ý[Y[ÈHÜ™\\™WØ\™Ý[Y[ÊØ\Xš[]K[ÙK˜]×Ø\™Ý[Y[ÊBˆYˆØ\Xš[]H[ˆÉÛ›X\ÜØØ[‰Ë	Û›X\ØY˜[˜ÙYÜØØ[‰ßH[™›Ý\™Ý[Y[Ë™Ù]
-	Ý\™Ù]	ÊN‚ˆYˆ[Š^XÝ
-HOHN‚ˆ˜Z\ÙH˜[YQ\œ›ÜŠ	Û›X\™\]Z\™\È^XÝHÛ™H^XÝ\™Ù]Ú[ˆ\™Ý[Y[×ÚœÛÛˆÛZ]È\™Ù]	ÊBˆ\™Ù]HÙ^˜XÝÚÜÝ
-^XÝÌJBˆYˆ›Ý\™Ù]‚ˆ˜Z\ÙH˜[YQ\œ›ÜŠ	Û›X\^XÝ\™Ù]\È›È˜[YÜÝ	ÊBˆ\™Ý[Y[ÖÉÝ\™Ù]	×HH\™Ù]ˆÝ˜[Y]WÜØÛÜJØ\Xš[]KY\‹\™Ý[Y[Ë›ÛÝË^XÝ
-BˆY™™XÝ]™WÚ›Ø—ÚYH›Ø—ÚYÜˆÛ™]×Ú›Ø—ÚY
-Ø\Xš[]JBˆ\™XÝÜžHHÚ›Ø—Ù\ŠY™™XÝ]™WÚ›Ø—ÚY
-Bˆ^Ù\
-˜[YQ\œ›Ü‹\Q\œ›Ü‹œÛÛ‹’”ÓÓ‘XÛÙQ\œ›ÜŠH\È^Î‚ˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ø›ØÚÙY	Ë	Ù\œ›Ü‰ÎˆÝŠ^Ê_Bˆš[˜\žHHÐTP’SUWÐ’ST’QTË™Ù]
-Ø\Xš[]JBˆÛÛÜ]HÝÛÛÜ]
-Ø\Xš[]JBˆYˆš[˜\žH[™›ÝÛÛÜ]‚ˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ý[˜]˜Z[X›IË	ØØ\Xš[]IÎˆØ\Xš[]K	Ü™\]Z\™YØš[˜\žIÎˆš[˜\žK	Ù\œ›Ü‰Îˆ‰Ü™\]Z\™Yš[˜\žHØš[˜\ž_H\È›Ý[œÝ[YÜˆ›ÝÛˆU	ßBˆ™\]Y\ÝÜ™XÛÜ™HÂˆ	ÜØÚ[XWÝ™\œÚ[Û‰Îˆ‹ˆ	Ú›Ø—ÚY	ÎˆY™™XÝ]™WÚ›Ø—ÚYˆ	ØØ\Xš[]IÎˆØ\Xš[]Kˆ	ÝY\‰ÎˆY\‹ˆ	Û[ÙIÎˆ[ÙKˆ	ÜØÛÜWÜ›ÛÝÉÎˆ›ÛÝËˆ	Ù^XÝÝ\™Ù]ÉÎˆ^XÝˆ	Ø\™Ý[Y[ÉÎˆ\™Ý[Y[Ëˆ	ÝÛÛÜ]	ÎˆÛÛÜ]ˆ	ÜÝ\YØ]	Îˆ[YKœÝ™[YJ	ÉVKI[KIY	R‰SN‰TÖ‰Ë[YK™Û][YJ
-JKˆBˆžN‚ˆ\™XÝÜžK›ZÙ\Š\™[ÏUYK^\ÝÛÚÏQ˜[ÙJBˆØ]ÛZX×ÚœÛÛŠ\™XÝÜžHÈ	Ü™\]Y\ÝšœÛÛ‰Ë™\]Y\ÝÜ™XÛÜ™
-BˆÝÜš]WÜÝ]J\™XÝÜžK	Ü]Y]YY	ËXØÙ\YØ]\™\]Y\ÝÜ™XÛÜ™ÉÜÝ\YØ]	×JBˆÛÜšÙ\—ÛÙÈH\™XÝÜžHÈ	ÝÛÜšÙ\‹›ÙÉÂˆÚ]ÛÜšÙ\—ÛÙË›Ü[Š	ØIË[˜ÛÙ[™ÏIÝ]‹N	ÊH\È[™N‚ˆ›ØÙ\ÜÈHÝXœ›ØÙ\ÜË”Ü[ŠÜÞ\Ë™^XÝ]X›KÝŠ]
-×Ùš[W×ÊKœ™\ÛÛ™J
-JK	ËK]ÛÜšÙ\‰ËY™™XÝ]™WÚ›Ø—ÚYKÝÝ]Z[™KÝ\œZ[™KÝ\Û™]×ÜÙ\ÜÚ[ÛUYKÛÜÙWÙ™ÏUYJBˆÝ]HHÜ™XYÚœÛÛŠÜÝ]WÜ]
-\™XÝÜžJJBˆYˆÝŠÝ]K™Ù]
-	ÜÝ]\ÉÊJH›Ý[ˆT“RSSÒ“Ð—ÔÕUTÎ‚ˆÝÜš]WÜÝ]J\™XÝÜžKÝŠÝ]K™Ù]
-	ÜÝ]\ÉÊHÜˆ	Ü]Y]YY	ÊKÛÜšÙ\—ÜY\›ØÙ\ÜËœY
-Bˆ^Ù\
-ÔÑ\œ›Ü‹˜[YQ\œ›ÜŠH\È^Î‚ˆYˆ\™XÝÜžK™^\ÝÊ
-H[™
-\™XÝÜžHÈ	Ü™\]Y\ÝšœÛÛ‰ÊK™^\ÝÊ
-N‚ˆÙš[˜[^™WÚ›ØŠ\™XÝÜžK™\]Y\ÝÜ™XÛÜ™ÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ù˜Z[Y	Ë	Ù\œ›Ü‰Îˆ™\Š^Ê_K	Ù˜Z[Y	ÊBˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ù˜Z[Y	Ë	Ú›Ø—ÚY	ÎˆY™™XÝ]™WÚ›Ø—ÚY	Ù\œ›Ü‰ÎˆÝŠ^Ê_Bˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆYK	ÜÝ]\ÉÎˆ	Ü]Y]YY	Ë	Ú›Ø—ÚY	ÎˆY™™XÝ]™WÚ›Ø—ÚY	ØØ\Xš[]IÎˆØ\Xš[]K	ÝY\‰ÎˆY\‹	Ø\Y˜XÝÙ\‰ÎˆÝŠ\™XÝÜžJK	ØÛZ[WÜÝ]IÎˆ	ØØ[™Y]IË	Ú[YÜš]IÎˆ˜[Ù_B‚‚›XÜH˜\ÝPÔ
-’^ÝšZÙHÛXÞHØ]]Ø^HŠB‚‚XÜÛÛ
 
-B™Yˆ^ÝšZÙWØØ\Xš[]WØØ][ÙÊˆ[ÙNˆÝˆHœÜ˜È‹[˜ÛYWÝ[˜]˜Z[X›Nˆ›ÛÛHYBŠHOˆXÝÜÝ‹[žWN‚ˆˆˆ“\Ý^ÜÙY^ÝšZÙHØ\Xš[]Y\ËY\œË[™Ý\œ™[š[˜\žH™XY[™\ÜËˆˆˆ‚ˆYˆ[ÙH›Ý[ˆSÕÑQÓSÑTÎ‚ˆ™]\›ˆÈœÝXØÙ\ÜÈŽˆ˜[ÙK™\œ›ÜˆŽˆš[˜[Y\ÜÙ\ÜÛY[[ÙHŸBˆ[ÝÙYÝY\œÈHÈH‹ˆ‹ÈŸHYˆ[ÙH[ˆÓÓ•PÕQÓSÑTÈ[ÙHÈH‹ˆŸBˆØ\Xš[]Y\ÈH×Bˆ›ÜˆØ\Xš[]H[ˆVÔÑQÐÐTP’SUQTÎ‚ˆY\ˆHÐTP’SUWÕQT–ØØ\Xš[]WBˆYˆY\ˆ›Ý[ˆ[ÝÙYÝY\œÎ‚ˆÛÛ[YBˆš[˜\žHHÐTP’SUWÐ’ST’QTË™Ù]
-Ø\Xš[]JBˆ]HÝÛÛÜ]
-Ø\Xš[]JBˆ]˜Z[X›HH›Ýš[˜\žHÜˆ›ÛÛ
-]
-BˆYˆ[˜ÛYWÝ[˜]˜Z[X›HÜˆ]˜Z[X›N‚ˆØ\Xš[]Y\Ë˜\[™
-ˆÂˆ›˜[YHŽˆØ\Xš[]KˆY\ˆŽˆY\‹ˆ˜]˜Z[X›HŽˆ]˜Z[X›Kˆœ™\]Z\™YØš[˜\žHŽˆš[˜\žKˆÛÛÜ]Žˆ]ˆBˆ
-Bˆ™]\›ˆÂˆœÝXØÙ\ÜÈŽˆYKˆ›[ÙHŽˆ[ÙKˆ™^ÜÙYØÛÝ[Žˆ[ŠØ\Xš[]Y\ÊKˆ˜Ø\Xš[]Y\ÈŽˆØ\Xš[]Y\Ëˆ˜›ØÚÙYØÛÝ[Žˆ[ŠÓPÖVÈ‘—JKˆB‚‚XÜÛÛ
+def _read_json(path: Path) -> Dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding='utf-8'))
+        return value if isinstance(value, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
 
-B™Yˆ^ÝšZÙWÜ™Y›YÚ
 
-HOˆXÝÜÝ‹[žWN‚ˆˆˆÚXÚÈHÛÜ˜XÚÈ‘TÕÙ\šXÙH[™Ý[[X\š^™HÝ\œ™[H[›˜X›HÛÛËˆˆˆ‚ˆX[ˆXÝÜÝ‹[žWBˆžN‚ˆÚ]\›X‹œ™\]Y\Ý\›Ü[ŠˆžÒVÕ’RÑWÐTWÕT“KÚX[‹[Y[Ý]LÌ
-H\È™\ÜÛœÙN‚ˆX[HœÛÛ‹›ØYÊ™\ÜÛœÙKœ™XY
+def _state_path(directory: Path) -> Path:
+    return directory / JOB_STATE_FILE
 
-K™XÛÙJ]‹NŠJBˆ^Ù\^Ù\[Ûˆ\È^ÎˆÈ›ÜXNˆ“LHH™]\›ˆÝXÝ\™Y™Y›YÚ˜Z[\™Bˆ™]\›ˆÂˆœÝXØÙ\ÜÈŽˆ˜[ÙKˆœÝ]\ÈŽˆ[˜]˜Z[X›H‹ˆ˜\WÝ\›ŽˆVÕ’RÑWÐTWÕT“ˆ™\œ›ÜˆŽˆÝŠ^ÊKˆB‚ˆ]˜Z[X›HHÂˆØ\Xš[]Bˆ›ÜˆØ\Xš[]H[ˆVÔÑQÐÐTP’SUQTÂˆYˆ›ÝÐTP’SUWÐ’ST’QTË™Ù]
-Ø\Xš[]JHÜˆÝÛÛÜ]
-Ø\Xš[]JBˆBˆÜ]HÚ][ÚXÚ
-š‹]UÓÓÔÑPTÒÔU
-BˆÚ\×Ü›Ú™XÝ\ØÛÝ™\žHH›ÛÛ
-Ü][™‹ÙÛËØš[‹Èˆ[ˆÜ]
-Bˆ™]\›ˆÂˆœÝXØÙ\ÜÈŽˆX[™Ù]
-œÝ]\ÈŠHOHšX[Hˆ[™Ú\×Ü›Ú™XÝ\ØÛÝ™\žKˆœÝ]\ÈŽˆX[™Ù]
-œÝ]\ÈŠKˆ™\œÚ[ÛˆŽˆX[™Ù]
-™\œÚ[ÛˆŠKˆ˜\WÝ\›ŽˆVÕ’RÑWÐTWÕT“ˆ™^ÜÙYØØ\Xš[]Y\ÈŽˆ[ŠVÔÑQÐÐTP’SUQTÊKˆœ[›˜X›WØØ\Xš[]Y\ÈŽˆ[Š]˜Z[X›JKˆšÜ]ŽˆÜ]ˆšÜ›Ú™XÝ\ØÛÝ™\žHŽˆÚ\×Ü›Ú™XÝ\ØÛÝ™\žKˆ\Ý™X[WØ]˜Z[X›WØš[˜\šY\ÈŽˆX[™Ù]
-Ý[ÝÛÛ×Ø]˜Z[X›HŠKˆ\Ý™X[WØÚXÚÙYØš[˜\šY\ÈŽˆX[™Ù]
-Ý[ÝÛÛ×ØÛÝ[ŠKˆB‚‚XÜÛÛ
 
-B™Yˆ^ÝšZÙWÚ›Ø—ÜÝ]\Ê›Ø—ÚYˆÝŠHOˆXÝÜÝ‹[žWN‚ˆˆˆ”™XY\˜X›H›ØˆÝ]H[™^ÜÙH[YÜš]HÛ›HY\ˆ\›Z[˜[\Y˜XÝÈ^\Ýˆˆˆ‚ˆžN‚ˆ\™XÝÜžHHÚ›Ø—Ù\Š›Ø—ÚY
-Bˆ™\]Y\ÝHÜ™XYÚœÛÛŠ\™XÝÜžHÈ	Ü™\]Y\ÝšœÛÛ‰ÊBˆÝ]HHÜ™XYÚœÛÛŠÜÝ]WÜ]
-\™XÝÜžJJBˆYˆ›Ý™\]Y\ÝÜˆ›ÝÝ]N‚ˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Û›ÝÙ›Ý[™	Ë	Ú›Ø—ÚY	Îˆ›Ø—ÚY	Ú[YÜš]IÎˆ˜[Ù_BˆÝ]\ÈHÝŠÝ]K™Ù]
-	ÜÝ]\ÉË	Ü]Y]YY	ÊJBˆ™\Ý[Ü]H\™XÝÜžHÈ	Ü™\Ý[šœÛÛ‰ÂˆYˆÝ]\È›Ý[ˆT“RSSÒ“Ð—ÔÕUTÈ[™›Ý™\Ý[Ü]™^\ÝÊ
-N‚ˆ\]YHÝ]K™Ù]
-	Ý\]YØ]	Ë	ÉÊBˆYÙHH[YK[YJ
-HH
-\™XÝÜžKœÝ]
+def _write_state(directory: Path, status: str, **fields: Any) -> Dict[str, Any]:
+    if status not in {'queued', 'running', *TERMINAL_JOB_STATES}:
+        raise ValueError(f'invalid job status: {status}')
+    state = _read_json(_state_path(directory))
+    state.update(fields)
+    state['schema_version'] = 1
+    state['status'] = status
+    state['updated_at'] = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+    _atomic_json(_state_path(directory), state)
+    return state
 
-KœÝÛ][YHYˆ\™XÝÜžK™^\ÝÊ
-H[ÙH[YK[YJ
-JBˆYˆ›ÝÝÛÜšÙ\—Ú\×Ø[]™JÝ]K™Ù]
-	ÝÛÜšÙ\—ÜY	ÊJH[™YÙHHÓÔ’ÑT—ÔÕT•ÑÔPÑWÔÑPÓÓ‘Î‚ˆÙš[˜[^™WÚ›ØŠ\™XÝÜžK™\]Y\ÝÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	ØX›ÜY	Ë	Ù\œ›Ü‰Îˆ	ÝÛÜšÙ\ˆ^]Y™Y›Ü™H\›Z[˜[\Y˜XÝ	ßK	ØX›ÜY	ÊBˆÝ]HHÜ™XYÚœÛÛŠÜÝ]WÜ]
-\™XÝÜžJJBˆÝ]\ÈHÝŠÝ]K™Ù]
-	ÜÝ]\ÉË	ØX›ÜY	ÊJBˆYˆÝ]\È›Ý[ˆT“RSSÒ“Ð—ÔÕUTÈÜˆ›Ý™\Ý[Ü]™^\ÝÊ
-HÜˆ›Ý
-\™XÝÜžHÈ	ÔÒLM”ÕSTËšœÛÛ‰ÊK™^\ÝÊ
-N‚ˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆÝ]\Ë	Ú›Ø—ÚY	Îˆ›Ø—ÚY	ØØ\Xš[]IÎˆ™\]Y\Ý™Ù]
-	ØØ\Xš[]IÊK	Ú[YÜš]IÎˆ˜[ÙK	Ø\Y˜XÝÙ\‰ÎˆÝŠ\™XÝÜžJ_Bˆ™\Ý[HÜ™XYÚœÛÛŠ™\Ý[Ü]
-BˆÝ[\ÈHÜ™XYÚœÛÛŠ\™XÝÜžHÈ	ÔÒLM”ÕSTËšœÛÛ‰ÊBˆ[YÜš]HH›ÛÛ
-Ý[\ÊH[™[
 
-\™XÝÜžHÈ˜[YJKš\×Ùš[J
-H[™ÜÚLMŠ\™XÝÜžHÈ˜[YJHOHYÙ\Ý›Üˆ˜[YKYÙ\Ý[ˆÝ[\Ëš][\Ê
-JBˆÛÛ\]YHÝ]\ÈOH	ØÛÛ\]Y	È[™›ÛÛ
-™\Ý[™Ù]
-	Ù^XÝ][Û‰ËßJK™Ù]
-	ÜÝXØÙ\ÜÉÊJBˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆÛÛ\]Y[™[YÜš]K	ÜÝ]\ÉÎˆÝ]\Ë	Ú›Ø—ÚY	Îˆ›Ø—ÚY	ØØ\Xš[]IÎˆ™\Ý[™Ù]
-	ØØ\Xš[]IË™\]Y\Ý™Ù]
-	ØØ\Xš[]IÊJK	ØÛZ[WÜÝ]IÎˆ™\Ý[™Ù]
-	ØÛZ[WÜÝ]IË	ØØ[™Y]IÊK	Ú[YÜš]IÎˆ[YÜš]K	Ø\Y˜XÝÙ\‰ÎˆÝŠ\™XÝÜžJ_Bˆ^Ù\
-˜[YQ\œ›Ü‹ÔÑ\œ›Ü‹œÛÛ‹’”ÓÓ‘XÛÙQ\œ›ÜŠH\È^Î‚ˆ™]\›ˆÉÜÝXØÙ\ÜÉÎˆ˜[ÙK	ÜÝ]\ÉÎˆ	Ú[˜[Y	Ë	Ù\œ›Ü‰ÎˆÝŠ^ÊK	Ú[YÜš]IÎˆ˜[Ù_B‚‚™YˆÛXZÙWØØ\Xš[]WÝÛÛ
-Ø\Xš[]NˆÝŠN‚ˆY\ˆHÐTP’SUWÕQT–ØØ\Xš[]WB‚ˆYˆ[›ÚÙJˆ\™Ý[Y[×ÚœÛÛŽˆÝˆHžßH‹ˆ[ÙNˆÝˆHœÜ˜È‹ˆØÛÜWÜ›ÛÝÎˆÝˆHˆ‹ˆ^XÝÝ\™Ù]ÎˆÝˆHˆ‹ˆ›Ø—ÚYˆÝˆHˆ‹ˆ
-HOˆXÝÜÝ‹[žWN‚ˆ™]\›ˆ^XÝ]WØØ\Xš[]JˆØ\Xš[]Kˆ\™Ý[Y[×ÚœÛÛX\™Ý[Y[×ÚœÛÛ‹ˆ[ÙO[[ÙKˆØÛÜWÜ›ÛÝÏ\ØÛÜWÜ›ÛÝËˆ^XÝÝ\™Ù]ÏY^XÝÝ\™Ù]Ëˆ›Ø—ÚYZ›Ø—ÚYˆ
-B‚ˆ[›ÚÙK—×Û˜[YW×ÈHˆš^ÝšZÙWÜ[—ÞØØ\Xš[]_H‚ˆ[›ÚÙK—×ÙØ××ÈH
-ˆˆ”[ˆ^ÝšZÙHØ\Xš[]HØØ\Xš[]_H›ÝYÚHÛXÞHØ]]Ø^H‚ˆˆŠY\ˆÝY\ŸJKˆ\™Ý[Y[È]\Ý™HH”ÓÓˆØš™XÝÈØÛÜH\ÈX[™]ÜžKˆ‚ˆ
-Bˆ™]\›ˆ[›ÚÙB‚‚™›ÜˆØØ\Xš[]H[ˆVÔÑQÐÐTP’SUQTÎ‚ˆXÜÛÛ
+def _upstream_command(timeout: int) -> str:
+    """Keep the upstream client and FastMCP timeout budgets identical."""
+    return ' '.join(shlex.quote(part) for part in (str(HEXSTRIKE_PYTHON), str(UPSTREAM_MCP), '--server', str(HEXSTRIKE_API_URL), '--timeout', str(timeout)))
 
-JÛXZÙWØØ\Xš[]WÝÛÛ
-ØØ\Xš[]JJB‚‚šYˆ×Û˜[YW×ÈOH—×ÛXZ[—×ÈŽ‚ˆ\œÙ\ˆH\™Ü\œÙK\™Ý[Y[\œÙ\ŠYÚ[Q˜[ÙJBˆ\œÙ\‹˜YØ\™Ý[Y[
-	ËK]ÛÜšÙ\‰ËY˜][IÉÊBˆ\™ÜËÝ[šÛ›ÝÛˆH\œÙ\‹œ\œÙWÚÛ›ÝÛ—Ø\™ÜÊ
-Bˆ“Ð—Ô“ÓÕ›ZÙ\Š\™[ÏUYK^\ÝÛÚÏUYJBˆYˆ\™ÜËÛÜšÙ\Ž‚ˆ˜Z\ÙHÞ\Ý[Q^]
-Ü[—Ú›ØŠ\™ÜËÛÜšÙ\ŠJBˆXÜœ[Š
-B
+
+def _call_upstream(capability: str, arguments: Mapping[str, Any], timeout: int) -> Dict[str, Any]:
+    command = [
+        FASTMCP_BIN,
+        'call',
+        '--command',
+        _upstream_command(timeout),
+        '--target',
+        capability,
+        '--input-json',
+        json.dumps(arguments, ensure_ascii=False, separators=(',', ':')),
+        '--json',
+        '--timeout',
+        str(timeout),
+    ]
+    started = time.time()
+    command_environment = os.environ.copy()
+    command_environment['PATH'] = TOOL_SEARCH_PATH
+    try:
+        completed = subprocess.run(command, capture_output=True, text=True, timeout=timeout + 20, check=False, env=command_environment)
+    except subprocess.TimeoutExpired as exc:
+        return {'success': False, 'status': 'timeout', 'error': str(exc), 'execution_time': time.time() - started}
+    parsed: Any = None
+    if completed.stdout.strip():
+        try:
+            parsed = json.loads(completed.stdout)
+        except json.JSONDecodeError:
+            parsed = None
+    return {
+        'success': completed.returncode == 0 and parsed is not None,
+        'status': 'completed' if completed.returncode == 0 and parsed is not None else 'failed',
+        'returncode': completed.returncode,
+        'execution_time': time.time() - started,
+        'result': parsed,
+        'stdout': completed.stdout,
+        'stderr': completed.stderr,
+    }
+
+
+def _finalize_job(directory: Path, request: Mapping[str, Any], execution: Mapping[str, Any], status: str) -> Dict[str, Any]:
+    """Write terminal artifacts atomically for every accepted job."""
+    final_status = status if status in TERMINAL_JOB_STATES else 'failed'
+    result_record = {
+        **dict(request),
+        'completed_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+        'status': final_status,
+        'execution': dict(execution),
+        'claim_state': 'candidate',
+        'verified': False,
+    }
+    result_path = directory / 'result.json'
+    _atomic_json(result_path, result_record)
+    request_path = directory / 'request.json'
+    sums = {'request.json': _sha256(request_path), 'result.json': _sha256(result_path)}
+    _atomic_json(directory / 'SHA256SUMS.json', sums)
+    _write_state(directory, final_status, completed_at=result_record['completed_at'])
+    return result_record
+
+
+def _run_job(job_id: str) -> int:
+    """Detached worker entrypoint; always leaves a terminal result artifact."""
+    try:
+        directory = _job_dir(job_id)
+        request = _read_json(directory / 'request.json')
+        if not request:
+            return 2
+        _write_state(directory, 'running', started_at=time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), worker_pid=os.getpid())
+        timeout = TIER_TIMEOUTS.get(str(request.get('tier')), TIER_TIMEOUTS['A'])
+        execution = _call_upstream(str(request.get('capability')), request.get('arguments', {}), timeout)
+        status = str(execution.get('status', 'failed'))
+        _finalize_job(directory, request, execution, status)
+        return 0 if status == 'completed' else 1
+    except BaseException as exc:  # Worker must preserve a terminal record even after an internal error.
+        try:
+            directory = _job_dir(job_id)
+            request = _read_json(directory / 'request.json')
+            if request:
+                _finalize_job(directory, request, {'success': False, 'status': 'failed', 'error': repr(exc)}, 'failed')
+        except BaseException:
+            pass
+        return 1
+
+
+def _worker_is_alive(pid: Any) -> bool:
+    try:
+        value = int(pid)
+        if value <= 0:
+            return False
+        os.kill(value, 0)
+        return True
+    except (TypeError, ValueError, ProcessLookupError):
+        return False
+    except PermissionError:
+        return True
+
+
+def execute_capability(
+    capability: str,
+    arguments_json: str = '{}',
+    mode: str = 'src',
+    scope_roots: str = '',
+    exact_targets: str = '',
+    job_id: str = '',
+) -> Dict[str, Any]:
+    """Validate, enqueue, and durably record one optional upstream capability."""
+    tier = CAPABILITY_TIER.get(capability)
+    if tier not in {'A', 'B', 'C'}:
+        return {'success': False, 'status': 'blocked', 'error': 'capability is not exposed'}
+    if mode not in ALLOWED_MODES:
+        return {'success': False, 'status': 'blocked', 'error': 'invalid assessment mode'}
+    if tier == 'C' and mode not in CONTRACTED_MODES:
+        return {'success': False, 'status': 'blocked', 'error': 'C-tier capability requires contracted, lab, or ctf mode'}
+    try:
+        raw_arguments = json.loads(arguments_json or '{}')
+        if not isinstance(raw_arguments, dict):
+            raise ValueError('arguments_json must contain a JSON object')
+        roots = _parse_list(scope_roots)
+        exact = _parse_list(exact_targets)
+        if not roots:
+            raise ValueError('scope_roots is required')
+        arguments = _prepare_arguments(capability, mode, raw_arguments)
+        if capability in {'nmap_scan', 'nmap_advanced_scan'} and not arguments.get('target'):
+            if len(exact) != 1:
+                raise ValueError('nmap requires exactly one exact target when arguments_json omits target')
+            target = _extract_host(exact[0])
+            if not target:
+                raise ValueError('nmap exact target has no valid host')
+            arguments['target'] = target
+        _validate_scope(capability, tier, arguments, roots, exact)
+        effective_job_id = job_id or _new_job_id(capability)
+        directory = _job_dir(effective_job_id)
+    except (ValueError, TypeError, json.JSONDecodeError) as exc:
+        return {'success': False, 'status': 'blocked', 'error': str(exc)}
+    binary = CAPABILITY_BINARIES.get(capability)
+    tool_path = _tool_path(capability)
+    if binary and not tool_path:
+        return {'success': False, 'status': 'unavailable', 'capability': capability, 'required_binary': binary, 'error': f'required binary {binary} is not installed or not on PATH'}
+    request_record = {
+        'schema_version': 2,
+        'job_id': effective_job_id,
+        'capability': capability,
+        'tier': tier,
+        'mode': mode,
+        'scope_roots': roots,
+        'exact_targets': exact,
+        'arguments': arguments,
+        'tool_path': tool_path,
+        'started_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+    }
+    try:
+        directory.mkdir(parents=True, exist_ok=False)
+        _atomic_json(directory / 'request.json', request_record)
+        _write_state(directory, 'queued', accepted_at=request_record['started_at'])
+        worker_log = directory / 'worker.log'
+        with worker_log.open('a', encoding='utf-8') as handle:
+            process = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), '--worker', effective_job_id], stdout=handle, stderr=handle, start_new_session=True, close_fds=True)
+        state = _read_json(_state_path(directory))
+        if str(state.get('status')) not in TERMINAL_JOB_STATES:
+            _write_state(directory, str(state.get('status') or 'queued'), worker_pid=process.pid)
+    except (OSError, ValueError) as exc:
+        if directory.exists() and (directory / 'request.json').exists():
+            _finalize_job(directory, request_record, {'success': False, 'status': 'failed', 'error': repr(exc)}, 'failed')
+        return {'success': False, 'status': 'failed', 'job_id': effective_job_id, 'error': str(exc)}
+    return {'success': True, 'status': 'queued', 'job_id': effective_job_id, 'capability': capability, 'tier': tier, 'artifact_dir': str(directory), 'claim_state': 'candidate', 'integrity': False}
+
+
+mcp = FastMCP("HexStrike Policy Gateway")
+
+
+@mcp.tool()
+def hexstrike_capability_catalog(
+    mode: str = "src", include_unavailable: bool = True
+) -> Dict[str, Any]:
+    """List exposed HexStrike capabilities, tiers, and current binary readiness."""
+    if mode not in ALLOWED_MODES:
+        return {"success": False, "error": "invalid assessment mode"}
+    allowed_tiers = {"A", "B", "C"} if mode in CONTRACTED_MODES else {"A", "B"}
+    capabilities = []
+    for capability in EXPOSED_CAPABILITIES:
+        tier = CAPABILITY_TIER[capability]
+        if tier not in allowed_tiers:
+            continue
+        binary = CAPABILITY_BINARIES.get(capability)
+        path = _tool_path(capability)
+        available = not binary or bool(path)
+        if include_unavailable or available:
+            capabilities.append(
+                {
+                    "name": capability,
+                    "tier": tier,
+                    "available": available,
+                    "required_binary": binary,
+                    "tool_path": path,
+                }
+            )
+    return {
+        "success": True,
+        "mode": mode,
+        "exposed_count": len(capabilities),
+        "capabilities": capabilities,
+        "blocked_count": len(POLICY["D"]),
+    }
+
+
+@mcp.tool()
+def hexstrike_preflight() -> Dict[str, Any]:
+    """Check the loopback REST service and summarize currently runnable tools."""
+    health: Dict[str, Any]
+    try:
+        with urllib.request.urlopen(f"{HEXSTRIKE_API_URL}/health", timeout=30) as response:
+            health = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:  # noqa: BLE001 - return structured preflight failure
+        return {
+            "success": False,
+            "status": "unavailable",
+            "api_url": HEXSTRIKE_API_URL,
+            "error": str(exc),
+        }
+
+    available = [
+        capability
+        for capability in EXPOSED_CAPABILITIES
+        if not CAPABILITY_BINARIES.get(capability) or _tool_path(capability)
+    ]
+    httpx_path = shutil.which("httpx", path=TOOL_SEARCH_PATH)
+    httpx_is_projectdiscovery = bool(httpx_path and "/go/bin/" in httpx_path)
+    return {
+        "success": health.get("status") == "healthy" and httpx_is_projectdiscovery,
+        "status": health.get("status"),
+        "version": health.get("version"),
+        "api_url": HEXSTRIKE_API_URL,
+        "exposed_capabilities": len(EXPOSED_CAPABILITIES),
+        "runnable_capabilities": len(available),
+        "httpx_path": httpx_path,
+        "httpx_projectdiscovery": httpx_is_projectdiscovery,
+        "upstream_available_binaries": health.get("total_tools_available"),
+        "upstream_checked_binaries": health.get("total_tools_count"),
+    }
+
+
+@mcp.tool()
+def hexstrike_job_status(job_id: str) -> Dict[str, Any]:
+    """Read durable job state and expose integrity only after terminal artifacts exist."""
+    try:
+        directory = _job_dir(job_id)
+        request = _read_json(directory / 'request.json')
+        state = _read_json(_state_path(directory))
+        if not request or not state:
+            return {'success': False, 'status': 'not_found', 'job_id': job_id, 'integrity': False}
+        status = str(state.get('status', 'queued'))
+        result_path = directory / 'result.json'
+        if status not in TERMINAL_JOB_STATES and not result_path.exists():
+            updated = state.get('updated_at', '')
+            age = time.time() - (directory.stat().st_mtime if directory.exists() else time.time())
+            if not _worker_is_alive(state.get('worker_pid')) and age >= WORKER_START_GRACE_SECONDS:
+                _finalize_job(directory, request, {'success': False, 'status': 'aborted', 'error': 'worker exited before terminal artifact'}, 'aborted')
+                state = _read_json(_state_path(directory))
+                status = str(state.get('status', 'aborted'))
+        if status not in TERMINAL_JOB_STATES or not result_path.exists() or not (directory / 'SHA256SUMS.json').exists():
+            return {'success': False, 'status': status, 'job_id': job_id, 'capability': request.get('capability'), 'integrity': False, 'artifact_dir': str(directory)}
+        result = _read_json(result_path)
+        sums = _read_json(directory / 'SHA256SUMS.json')
+        integrity = bool(sums) and all((directory / name).is_file() and _sha256(directory / name) == digest for name, digest in sums.items())
+        completed = status == 'completed' and bool(result.get('execution', {}).get('success'))
+        return {'success': completed and integrity, 'status': status, 'job_id': job_id, 'capability': result.get('capability', request.get('capability')), 'claim_state': result.get('claim_state', 'candidate'), 'integrity': integrity, 'artifact_dir': str(directory)}
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        return {'success': False, 'status': 'invalid', 'error': str(exc), 'integrity': False}
+
+
+def _make_capability_tool(capability: str):
+    tier = CAPABILITY_TIER[capability]
+
+    def invoke(
+        arguments_json: str = "{}",
+        mode: str = "src",
+        scope_roots: str = "",
+        exact_targets: str = "",
+        job_id: str = "",
+    ) -> Dict[str, Any]:
+        return execute_capability(
+            capability,
+            arguments_json=arguments_json,
+            mode=mode,
+            scope_roots=scope_roots,
+            exact_targets=exact_targets,
+            job_id=job_id,
+        )
+
+    invoke.__name__ = f"hexstrike_run_{capability}"
+    invoke.__doc__ = (
+        f"Run HexStrike capability {capability} through the policy gateway "
+        f"(tier {tier}). Arguments must be a JSON object; scope is mandatory."
+    )
+    return invoke
+
+
+for _capability in EXPOSED_CAPABILITIES:
+    mcp.tool()(_make_capability_tool(_capability))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument('--worker', default='')
+    args, _unknown = parser.parse_known_args()
+    JOB_ROOT.mkdir(parents=True, exist_ok=True)
+    if args.worker:
+        raise SystemExit(_run_job(args.worker))
+    mcp.run()
