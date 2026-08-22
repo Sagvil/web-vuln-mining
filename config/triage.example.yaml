@@ -1,0 +1,13 @@
+# Copy into a run directory as triage.yaml. This is the only human decision input.
+findings:
+  - fingerprint: "replace-with-summary-fingerprint"
+    status: needs-review  # candidate | needs-review | reproduced | excluded
+    reviewer: ""
+    reviewed_at: ""
+    human_reviewed: false
+    scope_confirmed: false
+    impact: ""
+    cwe: ""
+    cvss_v4: ""
+    recommendation: ""
+    reproduction_steps: []

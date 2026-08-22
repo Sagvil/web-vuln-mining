@@ -1,0 +1,93 @@
+rules:
+  - id: python-sqli-interpolation
+    languages: [python]
+    severity: ERROR
+    message: SQL is built with interpolation before execution; use query parameters.
+    metadata: {cwe: CWE-89, confidence: high, status: candidate}
+    patterns:
+      - pattern-either:
+          - pattern: $CURSOR.execute(f"...", ...)
+          - pattern: $CURSOR.execute("..." % ..., ...)
+  - id: python-nosql-user-query
+    languages: [python]
+    severity: WARNING
+    message: Request data reaches a Mongo query; review operator allowlisting.
+    metadata: {cwe: CWE-943, confidence: medium, status: candidate}
+    pattern: $COLLECTION.find(request.$FIELD, ...)
+  - id: python-command-execution
+    languages: [python]
+    severity: ERROR
+    message: Dynamic command execution requires a fixed executable and allowlisted arguments.
+    metadata: {cwe: CWE-78, confidence: high, status: candidate}
+    pattern-either:
+      - pattern: os.system($COMMAND)
+      - pattern: subprocess.$FUNC($COMMAND, shell=True, ...)
+  - id: python-ssrf-candidate
+    languages: [python]
+    severity: WARNING
+    message: HTTP client called with a non-literal URL; review outbound allowlisting.
+    metadata: {cwe: CWE-918, confidence: medium, status: candidate}
+    pattern-either:
+      - pattern: requests.get($URL, ...)
+      - pattern: requests.post($URL, ...)
+      - pattern: httpx.get($URL, ...)
+  - id: python-path-traversal-candidate
+    languages: [python]
+    severity: WARNING
+    message: User controlled path component may need containment validation.
+    metadata: {cwe: CWE-22, confidence: medium, status: candidate}
+    pattern-either:
+      - pattern: send_file($PATH, ...)
+      - pattern: open(request.$FIELD, ...)
+  - id: python-unsafe-deserialization
+    languages: [python]
+    severity: ERROR
+    message: Unsafe deserialization can execute attacker-controlled code.
+    metadata: {cwe: CWE-502, confidence: high, status: candidate}
+    pattern-either:
+      - pattern: pickle.loads(...)
+      - pattern: yaml.load(...)
+  - id: python-template-injection-candidate
+    languages: [python]
+    severity: WARNING
+    message: Dynamic server-side template rendering requires trusted template sources.
+    metadata: {cwe: CWE-1336, confidence: medium, status: candidate}
+    pattern-either:
+      - pattern: render_template_string($TEMPLATE, ...)
+      - pattern: flask.render_template_string($TEMPLATE, ...)
+  - id: python-upload-write-candidate
+    languages: [python]
+    severity: WARNING
+    message: Uploaded file is written to disk; review validation and isolated storage.
+    metadata: {cwe: CWE-434, confidence: medium, status: candidate}
+    pattern: $FILE.save($PATH, ...)
+  - id: python-weak-hash
+    languages: [python]
+    severity: WARNING
+    message: MD5/SHA1 is unsuitable for passwords and integrity-sensitive cryptography.
+    metadata: {cwe: CWE-327, confidence: high, status: candidate}
+    pattern-either:
+      - pattern: hashlib.md5(...)
+      - pattern: hashlib.sha1(...)
+  - id: python-jwt-no-signature-verify
+    languages: [python]
+    severity: ERROR
+    message: JWT signature verification is disabled.
+    metadata: {cwe: CWE-347, confidence: high, status: candidate}
+    pattern: 'jwt.decode(..., options={..., "verify_signature": False, ...}, ...)'
+  - id: python-open-redirect-candidate
+    languages: [python]
+    severity: WARNING
+    message: Dynamic redirect destination requires an allowlist.
+    metadata: {cwe: CWE-601, confidence: medium, status: candidate}
+    pattern-either:
+      - pattern: redirect(request.$FIELD, ...)
+      - pattern: flask.redirect(request.$FIELD, ...)
+  - id: python-authorization-review
+    languages: [python]
+    severity: INFO
+    message: Object lookup by request identifier is a review heuristic, not proof of IDOR.
+    metadata: {cwe: CWE-639, confidence: review, status: candidate}
+    pattern-either:
+      - pattern: $MODEL.query.get(request.$FIELD)
+      - pattern: $MODEL.objects.get(id=request.$FIELD)

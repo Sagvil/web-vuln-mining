@@ -1,0 +1,17 @@
+id: local-https-redirect-baseline
+
+info:
+  name: HTTPS Redirect Baseline
+  author: web-vuln-mining
+  severity: info
+  description: Review candidate when an HTTP endpoint does not redirect to HTTPS.
+  tags: local,passive,https,misconfig
+
+http:
+  - method: HEAD
+    path: ["{{BaseURL}}"]
+    redirects: false
+    matchers:
+      - type: dsl
+        dsl:
+          - "!starts_with(to_lower(location), 'https://')"

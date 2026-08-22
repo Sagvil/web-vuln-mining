@@ -1,3 +1,2 @@
-# Optional dependencies for the bundled HexStrike MCP client and policy bridge.
-mcp>=1.0,<2.0
-requests==2.32.5
+# Compatibility entry point.  Install through the complete hash lock.
+-r requirements-hexstrike.lock

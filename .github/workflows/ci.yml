@@ -1,26 +1,57 @@
 name: ci
+
+env:
+  SEMGREP_SEND_METRICS: 'off'
+
 on:
   push:
   pull_request:
+
 jobs:
-  validate:
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+  linux:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: '3.12'
-      - name: Install runner dependencies
-        shell: bash
-        run: python -m pip install -r requirements-runner.txt
-      - name: Compile Python
-        shell: bash
-        run: python -m compileall scripts hexstrike
-      - name: Validate lock files and adapter layout
-        shell: bash
+      - name: Install hash-locked CI dependencies
+        run: python -m pip install --require-hashes -r requirements-dev.lock
+      - name: Repository policy and rule checks
+        run: python scripts/ci_checks.py --with-semgrep
+      - name: Lint and type check
         run: |
-          python tests/test_repository.py
-          python tests/test_normalization.py
+          ruff check scripts tests
+          mypy scripts/ci_checks.py scripts/openapi_lint.py scripts/redaction.py scripts/toolchain_integrity.py scripts/triage.py --ignore-missing-imports
+      - name: Full offline test suite
+        run: python -m unittest discover -s tests -v
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Install hash-locked CI dependencies
+        shell: pwsh
+        run: python -m pip install --require-hashes -r requirements-dev.lock
+      - name: Windows lock, rules, report, and pure-Python tests
+        shell: pwsh
+        run: |
+          python scripts/ci_checks.py
+          python -m unittest discover -s tests -v
+
+  arm64:
+    # GitHub-hosted ARM64 runner: validates the native ARM64 lock without an
+    # emulator. The digest is recorded in config/ci-actions.lock.json.
+    runs-on: ubuntu-24.04-arm
+    container: python:3.12-slim@sha256:0568e6111802e74c03e8dda76565cdf4b88881d77de0d9b769846e9dfcb8d80a
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install hash-locked CI dependencies
+        run: python -m pip install --require-hashes -r requirements-dev.lock
+      - name: ARM64 lock and full offline tests
+        run: |
+          python scripts/ci_checks.py
+          python -m unittest discover -s tests -v

@@ -1,0 +1,20 @@
+id: local-debug-information-baseline
+
+info:
+  name: Debug or Version Information Baseline
+  author: web-vuln-mining
+  severity: info
+  description: Review candidate for common debug markers in an in-scope response.
+  tags: local,passive,debug,exposure
+
+http:
+  - method: GET
+    path: ["{{BaseURL}}"]
+    matchers:
+      - type: word
+        part: body
+        words:
+          - "Traceback (most recent call last)"
+          - "Exception Details:"
+          - "Stack trace:"
+        condition: or

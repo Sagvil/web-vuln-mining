@@ -1,0 +1,3 @@
+# Runtime packages for the profile runner.  The corresponding .lock is hash-only.
+PyYAML==6.0.3
+requests==2.32.5

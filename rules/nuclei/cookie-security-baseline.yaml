@@ -1,0 +1,16 @@
+id: local-cookie-security-baseline
+
+info:
+  name: Cookie Security Attribute Baseline
+  author: web-vuln-mining
+  severity: info
+  description: Review candidate for cookies missing Secure, HttpOnly, or SameSite attributes.
+  tags: local,passive,cookie,misconfig
+
+http:
+  - method: GET
+    path: ["{{BaseURL}}"]
+    matchers:
+      - type: dsl
+        dsl:
+          - "contains(to_lower(all_headers), 'set-cookie:') && (!contains(to_lower(all_headers), 'secure') || !contains(to_lower(all_headers), 'httponly') || !contains(to_lower(all_headers), 'samesite'))"

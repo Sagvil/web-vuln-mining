@@ -4,14 +4,14 @@
 
 ## Goal
 
-This project provides a portable, version-locked local workbench for Web applications and Web APIs. It focuses on SQL injection, XSS, IDOR, authentication and authorization issues, SSRF, uploads, path traversal, redirects, dependency risks, and API input-validation defects. Host, port, cloud, wireless, and operating-system scanning are outside the project scope. The explicit `active-dns-discovery` Profile is a DNS-only candidate inventory exception; it does not perform port or HTTP scanning.
+This project provides a portable, version-locked local workbench for Web applications and Web APIs. It produces static and passive **candidates** for SQL injection, XSS, SSRF, uploads, path traversal, redirects, dependency risks, and API input-validation defects. IDOR, authorization, and business-logic signals are review heuristics only, never an automated vulnerability conclusion. Host, port, cloud, wireless, and operating-system scanning are outside the project scope. The explicit `active-dns-discovery` Profile is a DNS-only candidate inventory exception; it does not perform port or HTTP scanning.
 
 ## How it works
 
 1. A `TARGET.yaml` manifest defines the source tree, exact Web/API scope, exclusions, request rate, and crawl budget.
 2. The bootstrapper installs pinned tools into a user-owned data directory and verifies release hashes.
 3. A selected profile runs source analysis, Web baseline discovery, or schema-driven API tests.
-4. Raw outputs, SARIF, request evidence, normalized findings, and a Markdown report are saved under one immutable run directory.
+4. Raw outputs, redacted SARIF, normalized schema-v2 evidence, bilingual review material, and manual-only platform drafts are saved under one immutable run directory.
 5. HexStrike is an optional, independent remote policy/audit and recheck component; `LOCAL_TOOL_STATUS` and `HEXSTRIKE_STATUS` remain separate.
 
 ## Required projects and runtime environment
@@ -29,7 +29,7 @@ This project provides a portable, version-locked local workbench for Web applica
 | Optional agents | Codex, [Hermes](https://github.com/NousResearch/hermes-agent), [OpenClaw](https://github.com/openclaw/openclaw) | Skill-based orchestration |
 | Optional policy service | Linux host with Python 3, systemd, SSH access, and `sudo` | HexStrike remote policy/audit deployment |
 
-The platform lock files in `config/tool-lock.windows.json`, `config/tool-lock.linux.json`, and `config/tool-lock.linux-arm64.json` define the supported tool versions. ARM64 installs use a user-owned Python environment and do not require `sudo`; native release assets are verified against their release checksum manifests and missing assets fall back to a locked Go source build. CodeQL is platform-disabled on Linux ARM64 and is replaced by local Semgrep taint rules; no AMD64 emulation is used.
+The platform lock files in `config/tool-lock.windows.json`, `config/tool-lock.linux.json`, and `config/tool-lock.linux-arm64.json` use schema v2. They contain a static asset URL and SHA-256, install method, executable path, and platform status. The installer does not fetch checksum manifests, source-build Go binaries, or use mutable Docker tags. It records the installed executable digest, Python wheel `RECORD` verification, and lock digest in `provenance.json`; read-only preflight refuses a Profile when those values do not match. CodeQL and Dalfox are explicitly unavailable on Linux ARM64 rather than silently falling back.
 
 ## Install
 
@@ -49,7 +49,7 @@ export WEB_VULN_MINING_ROOT="$PWD"
 ./bootstrap/install.sh --profile default --install-codex-skill
 ```
 
-The installer installs all twelve pinned tools, verifies hashes, creates an installation state file, and runs preflight. On ARM64 it uses the existing Python, Java, Docker, and Go runtimes without `apt` or `sudo`. Use `--dry-run` before an installation. On an existing clone, `python scripts/preflight.py --repair --json` explicitly repairs missing or damaged tools; preflight without `--repair` remains read-only.
+The installer installs only immutable locked assets into an isolated user-owned location, installs Python packages with `pip --require-hashes`, writes `provenance.json`, and runs preflight. It does not use Docker, Go, `uvx --from`, or a mutable release checksum at install time. Use `--dry-run` before an installation. `python scripts/preflight.py --repair --json` is an explicit repair request; ordinary preflight and profile startup are read-only.
 
 ## Agent adapters
 
@@ -91,11 +91,13 @@ python "$workbench\scripts\normalize_results.py" <RUN_DIR>
 python "$workbench\scripts\create_report.py" <RUN_DIR>
 ```
 
+`run_profile.py` invokes a narrowed, read-only preflight immediately before a real profile execution. `--validate-only` checks only scope syntax and never repairs or downloads anything.
+
 ## Profiles
 
-- `source`: Gitleaks → Trivy → Semgrep → CodeQL.
-- `web-baseline`: ProjectDiscovery `pd-httpx` → Katana → local Nuclei rules → loopback-only ZAP passive scan.
-- `api`: Schemathesis → ZAP OpenAPI import and passive scan; skips cleanly when no in-scope schema exists.
+- `source`: Gitleaks → Trivy → local Semgrep packs → CodeQL, plus a local CycloneDX SBOM.
+- `web-baseline`: ProjectDiscovery `pd-httpx` → Katana → local GET/HEAD-only Nuclei rules → loopback-only, API-keyed ZAP passive scan.
+- `api`: Schemathesis → downloaded in-scope schema only → offline OpenAPI lint (no external `$ref`/`servers` fetching) → loopback-only ZAP passive scan.
 - `verify-xss`: Dalfox against an explicit in-scope candidate URL file supplied by `--input`.
 - `verify-sqli`: sqlmap at level 1/risk 1 against an explicit in-scope candidate URL file supplied by `--input`.
 - `content-discovery`: ffuf against a bounded copy of `--wordlist`, without recursion.
@@ -108,6 +110,23 @@ python .\scripts\run_profile.py $scope --profile verify-xss --input .\candidates
 python .\scripts\run_profile.py $scope --profile verify-sqli --input .\candidates\sqli-urls.txt
 python .\scripts\run_profile.py $scope --profile content-discovery --wordlist .\wordlists\paths.txt --max-requests 300
 ```
+
+## Coverage matrix and evidence levels
+
+| Area | Automated output | Review heuristic | Explicit validation required |
+| --- | --- | --- | --- |
+| Python and JavaScript/TypeScript | Local Semgrep rules for injection, dynamic execution, SSRF, paths, deserialization, templates, uploads, crypto, JWT, redirect, and DOM sinks | Authorization/IDOR-shaped object access | Yes; scanner output is a candidate |
+| Web baseline | GET/HEAD-only local Nuclei checks for cookie attributes, CORS, cache policy, headers, debug markers, and HTTPS redirects | Header and cache context | Yes; verify behavior and impact manually |
+| OpenAPI | Offline lint of already downloaded schema bytes | Auth declaration, sensitive operations, transport, and constraints | Yes; no `$ref` or `servers` requests are followed |
+| Submission | Redacted English report, Chinese review summary, SARIF, JSON evidence | None | `triage.yaml`: `reproduced`, `human_reviewed: true`, and `scope_confirmed: true` |
+
+Run `python scripts/create_report.py <RUN_DIR>` after normalization. It writes `report.md`, `review.zh-CN.md`, SARIF/JSON evidence, a starter `triage.yaml`, and `submission/hackerone.md`, `submission/bugcrowd.md`, `submission/intigriti.md`, plus a manual checklist. Drafts contain only the human-reviewed, scope-confirmed reproductions. The workbench never stores platform credentials, calls platform APIs, or submits a report.
+
+ZAP is a local control plane only: the runner fixes the bind address to `127.0.0.1`, creates a new high-entropy API key and temporary session directory for every run, and removes its process and temporary directory on success, timeout, or exception. API keys and ZAP launch commands are intentionally omitted from normal run logs.
+
+## CI guarantees
+
+CI runs `python -m unittest discover -s tests -v` on Linux, Windows, and an ARM64 runner. Actions are pinned by commit SHA in `config/ci-actions.lock.json`, and the ARM64 container is pinned by image digest. CI only uses repository fixtures, temporary directories, and loopback services; it never scans an external target.
 
 ## DNS Candidate Discovery
 

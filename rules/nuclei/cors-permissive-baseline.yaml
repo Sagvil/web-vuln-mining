@@ -1,0 +1,19 @@
+id: local-cors-permissive-baseline
+
+info:
+  name: Permissive CORS Baseline
+  author: web-vuln-mining
+  severity: info
+  description: Review candidate for wildcard or reflected cross-origin policy.
+  tags: local,passive,cors,misconfig
+
+http:
+  - method: GET
+    path: ["{{BaseURL}}"]
+    matchers:
+      - type: word
+        part: header
+        words:
+          - "Access-Control-Allow-Origin: *"
+          - "access-control-allow-origin: *"
+        condition: or

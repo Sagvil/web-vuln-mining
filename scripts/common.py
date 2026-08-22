@@ -4,7 +4,6 @@ from __future__ import annotations
 import json
 import os
 import platform
-import shutil
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -48,7 +47,7 @@ def utc_stamp() -> str:
 
 def load_yaml(path: Path) -> dict[str, Any]:
     try:
-        import yaml
+        import yaml  # type: ignore[import-untyped]
     except ImportError as exc:
         raise RuntimeError("PyYAML is required. Run python -m pip install pyyaml") from exc
     value = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -81,17 +80,11 @@ def tool_path(name: str) -> Path | None:
     lock = load_json(platform_lock_path())
     record = lock.get("tools", {}).get(name, {})
     executable = record.get("executable")
-    if not isinstance(executable, str) or executable.startswith("uvx "):
+    if not isinstance(executable, str):
         return None
     portable = data_root() / executable
     if portable.exists():
         return portable
-    # Linux ZAP archives carry a release directory; accept its launcher without
-    # hard-coding a release-directory name in every caller.
-    if name == "zap" and data_root().is_dir():
-        discovered = next(data_root().glob("bin/zap/**/zap.sh"), None)
-        if discovered:
-            return discovered
     legacy = WORKBENCH_ROOT / executable
     return legacy if legacy.exists() else None
 
@@ -111,13 +104,8 @@ def command_for(name: str) -> list[str] | None:
     if path:
         if name == "sqlmap":
             configured = os.environ.get("WEB_VULN_MINING_PYTHON", "").strip() or str(runtime_settings().get("python") or "").strip()
-            return [configured or sys.executable, str(WORKBENCH_ROOT / "scripts" / "sqlmap_launcher.py"), "--sqlmap-root", str(path.parent)]
+            return [configured or sys.executable, str(path)]
         return [str(path)]
-    if name == "schemathesis":
-        uvx = shutil.which("uvx")
-        lock = load_json(platform_lock_path())
-        version = lock["tools"]["schemathesis"]["version"]
-        return [uvx, "--from", f"schemathesis=={version}", "schemathesis"] if uvx else None
     return None
 
 
@@ -143,6 +131,7 @@ def run_command(command: list[str], output: Path, timeout: int = DEFAULT_TIMEOUT
         environment = os.environ.copy()
         environment["PYTHONUTF8"] = "1"  # Keeps Python-based CLI output readable on Windows code pages.
         environment["PYTHONIOENCODING"] = "utf-8"
+        environment["SEMGREP_SEND_METRICS"] = "off"
         completed = subprocess.run(command, cwd=WORKBENCH_ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout, env=environment)
         status = "completed" if completed.returncode in acceptable else "failed"
         record = {"command": command, "returncode": completed.returncode, "status": status, "started_at": started, "stdout": completed.stdout, "stderr": completed.stderr}

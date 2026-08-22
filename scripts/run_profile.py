@@ -3,24 +3,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import secrets
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 import requests
 
 from common import DEFAULT_TIMEOUT_SECONDS, RUNS_DIR, WORKBENCH_ROOT, allowed_urls, command_for, is_allowed_url, load_yaml, run_command, tool_disabled_reason, utc_stamp, write_json
+from openapi_lint import lint_openapi_file
+from preflight import inspect as preflight_inspect
 from scope_validation import validate_scope
 
 # Configuration zone: execution limits and output locations for all profiles.
 DEFAULT_PROFILE_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_SECONDS
-ZAP_API_KEY = ""  # Empty by design: ZAP is bound only to loopback by this runner.
 MAX_DISCOVERED_URLS = 5000
 MAX_VERIFY_TARGETS = 20  # Maximum explicit candidate URLs processed by one verification run.
 DALFOX_WORKERS = 1  # Serial XSS verification to avoid request bursts.
@@ -64,6 +66,7 @@ def _source(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]]
         statuses.append({"tool": "source", "status": "skipped", "reason": f"source_root not found: {root}"})
         return
     raw, sarif, logs = run_dir / "raw", run_dir / "sarif", run_dir / "logs"
+    _cyclonedx_sbom(root, raw / "sbom.cdx.json", statuses)
     if not _missing("gitleaks", statuses):
         output = sarif / "gitleaks.sarif"
         _append_status(statuses, "gitleaks", run_command(command_for("gitleaks") + ["git", "--report-format", "sarif", "--report-path", str(output), str(root)], logs / "gitleaks.json", acceptable={0, 1}), output)
@@ -103,6 +106,29 @@ def _source(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]]
         output = sarif / f"codeql-{language}.sarif"
         record = run_command(command_for("codeql") + ["database", "analyze", str(db), f"codeql/{language}-queries", "--format=sarif-latest", f"--output={output}"], logs / f"codeql-{language}.json", acceptable={0, 1})
         _append_status(statuses, f"codeql-{language}", record, output)
+
+
+def _cyclonedx_sbom(source_root: Path, output: Path, statuses: list[dict[str, Any]]) -> None:
+    """Emit a small CycloneDX JSON inventory without adding a dependency scanner."""
+    components: list[dict[str, Any]] = []
+    for name in ("requirements.txt", "requirements-dev.txt"):
+        candidate = source_root / name
+        if not candidate.is_file():
+            continue
+        for line in candidate.read_text(encoding="utf-8", errors="replace").splitlines():
+            value = line.split("#", 1)[0].strip()
+            if not value or value.startswith(("-", ".")):
+                continue
+            package, separator, version = value.partition("==")
+            components.append({"type": "library", "name": package.strip(), "version": version.strip() if separator else "unspecified"})
+    write_json(output, {"bomFormat": "CycloneDX", "specVersion": "1.5", "serialNumber": f"urn:uuid:{run_dir_token(source_root)}", "version": 1, "components": components})
+    statuses.append({"tool": "cyclonedx-sbom", "status": "completed", "output": str(output), "components": len(components)})
+
+
+def run_dir_token(source_root: Path) -> str:
+    """Produce a non-sensitive deterministic SBOM identifier from a local path."""
+    import hashlib
+    return hashlib.sha256(str(source_root).encode("utf-8")).hexdigest()[:32]
 
 
 def _read_jsonl_urls(path: Path, scope: dict[str, Any]) -> list[str]:
@@ -145,11 +171,16 @@ def _katana_scope_args(scope: dict[str, Any]) -> list[str]:
     return args
 
 
-def _wait_zap(base: str, timeout: int) -> bool:
+def _zap_params(api_key: str, **values: Any) -> dict[str, Any]:
+    """Attach the transient local API key to every ZAP API request."""
+    return {"apikey": api_key, **values}
+
+
+def _wait_zap(base: str, timeout: int, api_key: str) -> bool:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
-            if requests.get(f"{base}/JSON/core/view/version/", timeout=3).ok:
+            if requests.get(f"{base}/JSON/core/view/version/", params=_zap_params(api_key), timeout=3).ok:
                 return True
         except requests.RequestException:
             pass
@@ -164,39 +195,56 @@ def _zap_passive(urls: list[str], run_dir: Path, settings: dict[str, Any], statu
     if _missing("zap", statuses):
         return
     zap = settings.get("zap") if isinstance(settings.get("zap"), dict) else {}
-    host, port = str(zap.get("host", "127.0.0.1")), int(zap.get("port", 8090))
+    # YAML can select a local port, but never a network-accessible bind host.
+    host = "127.0.0.1"
+    try:
+        port = int(zap.get("port", 8090))
+    except (TypeError, ValueError):
+        statuses.append({"tool": label, "status": "failed", "reason": "invalid local ZAP port"})
+        return
+    if not 1024 <= port <= 65535:
+        statuses.append({"tool": label, "status": "failed", "reason": "ZAP port must be a local user port"})
+        return
     base = f"http://{host}:{port}"
     zap_command = command_for("zap")
-    # zap.bat resolves zap-<version>.jar relative to its own directory.
-    process = subprocess.Popen(zap_command + ["-daemon", "-host", host, "-port", str(port), "-config", "api.disablekey=true"], cwd=Path(zap_command[0]).parent, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    if not _wait_zap(base, int(zap.get("startup_timeout_seconds", 90))):
-        process.terminate()
-        statuses.append({"tool": label, "status": "failed", "reason": "ZAP daemon did not become ready"})
-        return
-    try:
-        requests.get(f"{base}/JSON/core/action/newSession/", params={"overwrite": "true"}, timeout=10)
-        # OpenAPI import lets ZAP parse operation metadata without enabling an active attack scan.
-        for schema in openapi_schemas or []:
-            requests.get(f"{base}/JSON/openapi/action/importUrl/", params={"url": schema}, timeout=30)
-        delay = 1 / max(1, rate_limit)
-        for index, url in enumerate(urls):
-            requests.get(f"{base}/JSON/core/action/accessUrl/", params={"url": url}, timeout=30)
-            if index + 1 < len(urls):
-                time.sleep(delay)
-        # The runner deliberately avoids ZAP's autonomous spider: supplied URLs are already
-        # filtered by the TARGET manifest and Katana budget, so ZAP remains in the same scope.
-        alerts = requests.get(f"{base}/JSON/core/view/alerts/", params={"start": 0, "count": 9999}, timeout=30).json()
-        output = run_dir / "raw" / f"{label}.json"
-        write_json(output, alerts)
-        statuses.append({"tool": label, "status": "completed", "output": str(output), "alerts": len(alerts.get("alerts", []))})
-    except (requests.RequestException, ValueError) as exc:
-        statuses.append({"tool": label, "status": "failed", "reason": str(exc)})
-    finally:
-        process.terminate()
+    api_key = secrets.token_urlsafe(32)
+    # ZAP's temp directory is per run.  Neither key nor launch command reaches
+    # a conventional run log; only the de-sensitized outcome below is stored.
+    with tempfile.TemporaryDirectory(prefix="web-vuln-mining-zap-") as temporary:
+        process: subprocess.Popen[str] | None = None
         try:
-            process.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            process.kill()
+            process = subprocess.Popen(
+                zap_command + ["-daemon", "-host", host, "-port", str(port), "-dir", temporary, "-config", "api.disablekey=false", "-config", f"api.key={api_key}"],
+                cwd=Path(zap_command[0]).parent,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            if not _wait_zap(base, int(zap.get("startup_timeout_seconds", 90)), api_key):
+                statuses.append({"tool": label, "status": "failed", "reason": "ZAP daemon did not become ready"})
+                return
+            requests.get(f"{base}/JSON/core/action/newSession/", params=_zap_params(api_key, overwrite="true"), timeout=10)
+            # OpenAPI imports are deliberately restricted to already scope-validated URLs.
+            for schema in openapi_schemas or []:
+                requests.get(f"{base}/JSON/openapi/action/importUrl/", params=_zap_params(api_key, url=schema), timeout=30)
+            delay = 1 / max(1, rate_limit)
+            for index, url in enumerate(urls):
+                requests.get(f"{base}/JSON/core/action/accessUrl/", params=_zap_params(api_key, url=url), timeout=30)
+                if index + 1 < len(urls):
+                    time.sleep(delay)
+            alerts = requests.get(f"{base}/JSON/core/view/alerts/", params=_zap_params(api_key, start=0, count=9999), timeout=30).json()
+            output = run_dir / "raw" / f"{label}.json"
+            write_json(output, alerts)
+            statuses.append({"tool": label, "status": "completed", "output": str(output), "alerts": len(alerts.get("alerts", [])), "message": "ZAP passive completed"})
+        except (OSError, requests.RequestException, ValueError):
+            statuses.append({"tool": label, "status": "failed", "reason": "ZAP passive failed"})
+        finally:
+            if process is not None and process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=10)
 
 
 def _web(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]], settings: dict[str, Any]) -> None:
@@ -209,7 +257,6 @@ def _web(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]], s
     targets.parent.mkdir(parents=True, exist_ok=True)
     targets.write_text("\n".join(urls) + "\n", encoding="utf-8")
     rate = str(int(scope.get("rate_limit", 5)))
-    headers_file = str((scope.get("auth") or {}).get("headers_file", "")).strip()
     headers = _header_values(scope)
     header_args = [element for header in headers for element in ("-H", header)]
     if not _missing("pd-httpx", statuses):
@@ -241,6 +288,23 @@ def _api(scope: dict[str, Any], run_dir: Path, statuses: list[dict[str, Any]], s
         statuses.append({"tool": "api", "status": "skipped", "reason": "no in-scope OpenAPI URLs"})
         return
     raw, logs = run_dir / "raw", run_dir / "logs"
+    lint_findings: list[dict[str, Any]] = []
+    # Fetch only the schema URLs the Scope manifest has already accepted.  The
+    # offline linter receives saved bytes, and never resolves remote $ref values
+    # or contacts ``servers`` entries in the document.
+    for index, schema in enumerate(schemas):
+        saved = raw / f"openapi-{index}.json"
+        try:
+            response = requests.get(schema, timeout=30, headers={"Accept": "application/json, application/yaml, text/yaml"})
+            response.raise_for_status()
+            saved.write_bytes(response.content)
+            lint_findings.extend(lint_openapi_file(saved))
+        except (OSError, ValueError, requests.RequestException):
+            statuses.append({"tool": "openapi-lint", "status": "failed", "reason": "OpenAPI schema download or parse failed"})
+    lint_output = raw / "openapi-lint.json"
+    write_json(lint_output, {"schema_version": 1, "followed_external_refs": False, "findings": lint_findings})
+    if not any(item.get("tool") == "openapi-lint" and item.get("status") == "failed" for item in statuses):
+        statuses.append({"tool": "openapi-lint", "status": "completed", "output": str(lint_output), "findings": len(lint_findings)})
     if not _missing("schemathesis", statuses):
         for index, schema in enumerate(schemas):
             output = raw / f"schemathesis-{index}.txt"
@@ -463,6 +527,12 @@ def main() -> int:
     if args.validate_only:
         print(json.dumps({"scope": str(args.scope), "profile": args.profile, "status": "valid"}, ensure_ascii=False))
         return 0
+    # A normal profile must have a verifiable local toolchain.  This check is
+    # deliberately after --validate-only and deliberately does not repair.
+    preflight = preflight_inspect([args.profile])
+    if not preflight.get("ok"):
+        print(json.dumps({"status": "preflight-failed", "errors": preflight.get("errors", [])}, ensure_ascii=False), file=sys.stderr)
+        return 3
     if args.profile in {"verify-xss", "verify-sqli"} and not args.input:
         print(f"{args.profile} requires --input", file=sys.stderr)
         return 2

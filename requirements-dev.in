@@ -1,0 +1,4 @@
+# CI validates the installed local Semgrep rule pack as well as quality tools.
+-r requirements-tools.in
+ruff==0.12.8
+mypy==1.17.1

@@ -1,0 +1,4 @@
+[tool.ruff.lint]
+# The legacy HexStrike and SQLMap adapter scripts intentionally preserve their
+# upstream compact style. New P2/P3 code is still checked for all other rules.
+ignore = ["E401", "E402", "E701", "E702", "F401", "F841"]

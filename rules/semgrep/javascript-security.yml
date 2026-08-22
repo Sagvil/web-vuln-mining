@@ -1,0 +1,70 @@
+rules:
+  - id: javascript-dom-xss-candidate
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: DOM sink receives a dynamic value; validate context-aware sanitization.
+    metadata: {cwe: CWE-79, confidence: medium, status: candidate}
+    pattern-either:
+      - pattern: $NODE.innerHTML = $VALUE
+      - pattern: $NODE.outerHTML = $VALUE
+  - id: javascript-dangerous-redirect
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Dynamic browser navigation needs a trusted destination allowlist.
+    metadata: {cwe: CWE-601, confidence: medium, status: candidate}
+    pattern-either:
+      - pattern: window.location = $URL
+      - pattern: window.location.href = $URL
+      - pattern: location.assign($URL)
+  - id: javascript-prototype-pollution-candidate
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: User-controlled object merge needs prototype-key filtering.
+    metadata: {cwe: CWE-1321, confidence: medium, status: candidate}
+    pattern-either:
+      - pattern: Object.assign($TARGET, $INPUT)
+      - pattern: lodash.merge($TARGET, $INPUT)
+  - id: javascript-client-token-leak
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Token-like value is assigned to browser storage; review exposure risk.
+    metadata: {cwe: CWE-922, confidence: medium, status: candidate}
+    pattern-either:
+      - pattern: localStorage.setItem("token", $VALUE)
+      - pattern: sessionStorage.setItem("token", $VALUE)
+  - id: javascript-dynamic-execution
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Dynamic code execution is dangerous with attacker-influenced values.
+    metadata: {cwe: CWE-95, confidence: high, status: candidate}
+    pattern-either:
+      - pattern: eval($INPUT)
+      - pattern: new Function($INPUT)
+  - id: javascript-server-command-candidate
+    languages: [javascript, typescript]
+    severity: ERROR
+    message: Child process execution requires fixed commands and allowlisted arguments.
+    metadata: {cwe: CWE-78, confidence: high, status: candidate}
+    pattern-either:
+      - pattern: child_process.exec($COMMAND, ...)
+      - pattern: exec($COMMAND, ...)
+  - id: javascript-server-ssrf-candidate
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Server HTTP request with dynamic URL requires allowlisting.
+    metadata: {cwe: CWE-918, confidence: medium, status: candidate}
+    pattern-either:
+      - pattern: axios.get($URL, ...)
+      - pattern: fetch($URL, ...)
+  - id: javascript-weak-crypto
+    languages: [javascript, typescript]
+    severity: WARNING
+    message: Weak digest algorithm is not suitable for passwords or security decisions.
+    metadata: {cwe: CWE-327, confidence: high, status: candidate}
+    pattern: crypto.createHash("md5")
+  - id: javascript-authorization-review
+    languages: [javascript, typescript]
+    severity: INFO
+    message: Request ID based object access is a review heuristic, not proof of authorization failure.
+    metadata: {cwe: CWE-639, confidence: review, status: candidate}
+    pattern: $MODEL.findById(req.params.$FIELD)

@@ -1,0 +1,16 @@
+id: local-sensitive-cache-baseline
+
+info:
+  name: Sensitive Response Cache Baseline
+  author: web-vuln-mining
+  severity: info
+  description: Review candidate for potentially cacheable authenticated responses.
+  tags: local,passive,cache,misconfig
+
+http:
+  - method: GET
+    path: ["{{BaseURL}}"]
+    matchers:
+      - type: dsl
+        dsl:
+          - "contains(to_lower(all_headers), 'set-cookie:') && !contains(to_lower(all_headers), 'cache-control: no-store')"

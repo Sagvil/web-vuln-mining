@@ -4,7 +4,7 @@
 
 ## 项目目标
 
-本项目提供一个可移植、版本锁定的本地 Web / Web API 漏洞挖掘工作台，面向 SQL 注入、XSS、IDOR、认证与授权缺陷、SSRF、文件上传、路径遍历、开放重定向、依赖风险与 API 参数校验问题。
+本项目提供一个可移植、版本锁定的本地 Web / Web API 漏洞挖掘工作台，面向 SQL 注入、XSS、SSRF、文件上传、路径遍历、开放重定向、依赖风险与 API 参数校验问题输出**候选证据**。IDOR、鉴权和业务逻辑仅是人工审阅线索，绝不自动写成漏洞结论。
 
 项目边界仅覆盖网站、HTTP 服务、OpenAPI、GraphQL 与 Web 源码项目；不包含主机、端口、云资源、无线网络或操作系统侧扫描。`active-dns-discovery` 是显式启用的 DNS 候选资产发现例外：只执行 DNS-brute，不执行端口或 HTTP 扫描。
 
@@ -20,7 +20,7 @@ TARGET.yaml
                  └─ 原始结果 / SARIF / 证据 → 去重归一化 → Markdown 报告
 ```
 
-每次执行生成独立的 `runs/<timestamp>-<project>-<profile>/` 目录，保存目标快照、工具状态、原始结果、SARIF、证据引用、`summary.json` 和 `report.md`。
+每次执行生成独立的 `runs/<timestamp>-<project>-<profile>/` 目录，保存目标快照、工具状态、原始结果、脱敏 SARIF、schema v2 证据、`summary.json`、英文报告与中文审阅摘要。
 
 HexStrike 是独立的可选远端策略、审计和复核组件。即使远端服务未启用，本地 Profile 仍可完成；报告会分别显示 `LOCAL_TOOL_STATUS` 与 `HEXSTRIKE_STATUS`。
 
@@ -39,7 +39,7 @@ HexStrike 是独立的可选远端策略、审计和复核组件。即使远端�
 | 可选 Agent | Codex、[Hermes](https://github.com/NousResearch/hermes-agent)、[OpenClaw](https://github.com/openclaw/openclaw) | 通过 Skill 调度工作台 |
 | 可选 HexStrike 服务 | 具备 Python 3、systemd、SSH 和 `sudo` 的 Linux 主机 | 部署远端策略和审计服务 |
 
-工具精确版本由 `config/tool-lock.windows.json`、`config/tool-lock.linux.json` 和 `config/tool-lock.linux-arm64.json` 锁定。ARM64 安装使用用户目录下的 Python 环境，不需要 `sudo`；原生发布包通过其发布校验清单验证，缺少 ARM64 资产时从锁定 Go tag 构建。Linux ARM64 上的 CodeQL 标记为平台禁用，并由本地 Semgrep taint 规则替代；不使用 AMD64 模拟执行。
+工具精确版本由 `config/tool-lock.windows.json`、`config/tool-lock.linux.json` 和 `config/tool-lock.linux-arm64.json` 的 v2 schema 锁定：每项记录静态下载 URL、artifact SHA-256、安装方法、可执行路径和平台状态。安装器不会运行时拉取 checksum 清单、不会 Go 动态构建，也不会使用可变 Docker tag；它会写入 `provenance.json`，包含 lock digest、最终二进制 digest 与 Python wheel `RECORD` 校验结果。只读预检发现任一不匹配即拒绝执行 Profile。ARM64 的 CodeQL 与 Dalfox 会明确标记不可用，绝不静默降级。
 
 ## 安装
 
@@ -61,7 +61,7 @@ export WEB_VULN_MINING_ROOT="$PWD"
 ./bootstrap/install.sh --profile default --install-codex-skill
 ```
 
-安装器会安装全部 12 个固定版本工具、校验哈希、写入安装状态并运行预检。ARM64 使用现有的 Python、Java、Docker 与 Go 运行时，不执行 `apt` 或 `sudo`。已有克隆可显式执行 `python scripts/preflight.py --repair --json` 修复缺失、损坏或版本不符的工具；不带 `--repair` 的预检保持只读。
+安装器仅安装静态锁定的资产到隔离的用户目录，Python 包通过 `pip --require-hashes` 安装，并写入 provenance 后执行预检；不会使用 Docker、Go、`uvx --from` 或动态 checksum。已有克隆可显式执行 `python scripts/preflight.py --repair --json` 修复；普通预检和 Profile 启动保持只读。
 
 ```powershell
 .\bootstrap\install.ps1 -DryRun
@@ -105,11 +105,13 @@ python .\scripts\normalize_results.py <RUN_DIR>
 python .\scripts\create_report.py <RUN_DIR>
 ```
 
+真正执行 Profile 前，`run_profile.py` 会自动进行按 Profile 缩小范围的只读预检；`--validate-only` 仅验证 Scope，不下载、不修复。
+
 | Profile | 工具链 | 适用场景 |
 | --- | --- | --- |
-| `source` | Gitleaks → Trivy → Semgrep → CodeQL | 有源码的 Web 项目 |
-| `web-baseline` | pd-httpx → Katana → 本地 Nuclei 规则 → ZAP 被动扫描 | 网站、后台、HTTP 服务 |
-| `api` | Schemathesis → ZAP OpenAPI 导入和被动扫描 | 存在范围内 OpenAPI/GraphQL Schema 的 API |
+| `source` | Gitleaks → Trivy → 本地 Semgrep 规则包 → CodeQL，附 CycloneDX SBOM | 有源码的 Web 项目 |
+| `web-baseline` | pd-httpx → Katana → 仅 GET/HEAD 的本地 Nuclei 规则 → ZAP 被动扫描 | 网站、后台、HTTP 服务 |
+| `api` | Schemathesis → 已下载 schema 的离线 OpenAPI lint → ZAP 被动扫描 | 存在范围内 OpenAPI/GraphQL Schema 的 API |
 | `verify-xss` | Dalfox | `--input` 提供的范围内 XSS 候选 URL |
 | `verify-sqli` | sqlmap（level 1/risk 1） | `--input` 提供的范围内 SQL 注入候选 URL |
 | `content-discovery` | ffuf | `--wordlist` 的受限副本，不递归 |
@@ -122,6 +124,23 @@ python .\scripts\run_profile.py $scope --profile verify-xss --input .\candidates
 python .\scripts\run_profile.py $scope --profile verify-sqli --input .\candidates\sqli-urls.txt
 python .\scripts\run_profile.py $scope --profile content-discovery --wordlist .\wordlists\paths.txt --max-requests 300
 ```
+
+## 覆盖矩阵与证据等级
+
+| 范围 | 自动化输出 | 人工审阅线索 | 必须显式验证 |
+| --- | --- | --- | --- |
+| Python、JavaScript/TypeScript | 本地 Semgrep：注入、动态执行、SSRF、路径、反序列化、模板、上传、加密、JWT、跳转与 DOM sink | IDOR/鉴权形态的对象访问 | 是，规则命中只算 candidate |
+| Web 基线 | 仅 GET/HEAD 的本地 Nuclei：Cookie、CORS、缓存、header、调试信息与 HTTPS 跳转 | header/缓存上下文 | 是，需人工核验行为和影响 |
+| OpenAPI | 仅解析已下载 schema 的离线 lint | 鉴权声明、敏感操作、传输和约束 | 是；不跟随外部 `$ref` 或 `servers` |
+| 平台提交 | 脱敏英文报告、中文审阅摘要、SARIF、JSON 证据 | 无 | `triage.yaml` 中同时满足 `reproduced`、`human_reviewed: true`、`scope_confirmed: true` |
+
+运行 `python scripts/create_report.py <RUN_DIR>` 会生成 `report.md`、`review.zh-CN.md`、SARIF/JSON 证据、起始 `triage.yaml`、`submission/hackerone.md`、`submission/bugcrowd.md`、`submission/intigriti.md` 和提交清单。平台草稿默认排除所有未人工审阅、未复现或未确认 Scope 的 finding；本项目不保存平台凭据、不调用平台 API、不自动提交。
+
+ZAP 仅作为本机控制面：运行器固定绑定 `127.0.0.1`，每次生成高熵 API key 与独立临时会话目录，并在成功、超时、异常路径都回收子进程和临时目录。普通日志不记录启动命令或 API key。
+
+## CI 质量门禁
+
+CI 在 Linux、Windows、ARM64 Runner 全量执行 `python -m unittest discover -s tests -v`。GitHub Action 的 commit SHA 集中记录在 `config/ci-actions.lock.json`，ARM64 容器使用 image digest 固定。CI 仅使用仓库 fixture、临时目录与 loopback 服务，绝不下载后扫描外部目标。
 
 ## DNS 候选资产发现
 

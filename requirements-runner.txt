@@ -1,3 +1,2 @@
-# Runtime dependencies for the workbench runner. Keep versions reproducible across agents.
-PyYAML==6.0.3
-requests==2.32.5
+# Compatibility entry point.  Install through the complete hash lock.
+-r requirements-runner.lock
