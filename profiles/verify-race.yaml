@@ -1,0 +1,9 @@
+# Race-condition verification on limited-quota business endpoints (playbook: templates/race-condition.md).
+name: verify-race
+description: 竞态条件验证（有限次数/额度类接口，剧本见 templates/race-condition.md）。
+tools: [curl]
+requires: [candidate-file]
+max_targets: 10
+level: 2
+risk: 2
+template: race-condition

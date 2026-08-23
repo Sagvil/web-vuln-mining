@@ -1,0 +1,9 @@
+# NoSQL injection verification ($where / operator injection; playbook: templates/nosql-injection.md).
+name: verify-nosql
+description: NoSQL 注入验证（$where/操作符注入，剧本见 templates/nosql-injection.md）。
+tools: [curl]
+requires: [candidate-file]
+max_targets: 15
+level: 1
+risk: 1
+template: nosql-injection

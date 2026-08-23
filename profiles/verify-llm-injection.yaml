@@ -1,0 +1,9 @@
+# LLM prompt-injection verification on chat/AI endpoints (reference playbook: templates/llm-prompt-injection.md).
+name: verify-llm-injection
+description: LLM 提示注入验证（chat/AI 接口，参考剧本见 templates/llm-prompt-injection.md）。
+tools: [curl]
+requires: [candidate-file]
+max_targets: 10
+level: 1
+risk: 1
+template: llm-prompt-injection

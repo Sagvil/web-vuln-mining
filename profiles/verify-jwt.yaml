@@ -1,0 +1,9 @@
+# JWT structure analysis, alg=none and algorithm-confusion checks (playbook: templates/jwt-attacks.md).
+name: verify-jwt
+description: JWT 结构分析、alg=none、算法混淆验证（剧本见 templates/jwt-attacks.md）。
+tools: [jwt-tool]
+requires: [candidate-file]
+max_targets: 10
+level: 1
+risk: 1
+template: jwt-attacks

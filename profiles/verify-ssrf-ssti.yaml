@@ -1,0 +1,9 @@
+# SSRF/SSTI verification on URL-fetch and template-rendering features (playbook: templates/ssrf-ssti.md).
+name: verify-ssrf-ssti
+description: SSRF/SSTI 验证（URL 抓取/模板渲染功能，剧本见 templates/ssrf-ssti.md）。
+tools: [curl]
+requires: [candidate-file]
+max_targets: 10
+level: 1
+risk: 1
+template: ssrf-ssti

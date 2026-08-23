@@ -5,3 +5,4 @@ requires: [candidate-file]
 max_targets: 20
 level: 1
 risk: 1
+template: sql-injection
