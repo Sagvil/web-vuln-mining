@@ -169,8 +169,9 @@ Hermes 也可从 Git 安装：
 ```bash
 hermes skills tap add OWNER/web-vuln-mining
 hermes skills install web-mining
-hermes skills install pentest-orchestrator
 ```
+
+早期的 `pentest-orchestrator` 与 `pentest-hexstrike-executor` 已归档，不应安装或启用。
 
 OpenClaw：
 

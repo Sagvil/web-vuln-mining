@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "contract_id": "replace-with-human-approved-id",
+  "status": "active",
+  "valid_until": "2026-08-24T12:00:00+08:00",
+  "scope_ref": {
+    "path": "scopes/local-lab.yaml",
+    "sha256": "replace-with-sha256-of-the-exact-scope-file"
+  },
+  "allowed_profiles": ["web-baseline", "verify-sqli"],
+  "allowed_actions": ["bounded-network-read", "bounded-active-verification"],
+  "budgets": {
+    "max_targets": 1,
+    "max_rate_limit": 5
+  },
+  "skipped_profiles": ["verify-llm-injection"],
+  "forbidden_actions": ["external-submission", "credential-use", "payment-or-transfer"]
+}

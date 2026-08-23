@@ -50,7 +50,10 @@ def download(url: str, path: Path, expected: str) -> None:
 def extract(archive: Path, destination: Path) -> None:
     with tempfile.TemporaryDirectory(prefix="web-vuln-mining-") as temporary:
         temporary_root = Path(temporary)
-        if archive.suffix.lower() == ".zip":
+        # Some pinned download URLs (for example GitHub codeload tag URLs) do
+        # not retain their archive suffix in the cache filename. Prefer the
+        # verified archive's content signature in addition to its suffix.
+        if archive.suffix.lower() == ".zip" or zipfile.is_zipfile(archive):
             with zipfile.ZipFile(archive) as bundle:
                 bundle.extractall(temporary_root)
         else:

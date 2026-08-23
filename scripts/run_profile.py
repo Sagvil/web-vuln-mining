@@ -17,6 +17,8 @@ from typing import Any
 import requests
 
 from common import DEFAULT_TIMEOUT_SECONDS, RUNS_DIR, WORKBENCH_ROOT, allowed_urls, command_for, is_allowed_url, load_yaml, run_command, tool_disabled_reason, utc_stamp, write_json
+from governance import evaluate as evaluate_governance
+from governance import write_artifacts as write_governance_artifacts
 from openapi_lint import lint_openapi_file
 from preflight import inspect as preflight_inspect
 from scope_validation import validate_scope
@@ -527,6 +529,8 @@ def main() -> int:
     parser.add_argument("--input", type=Path, help="explicit in-scope candidate URL file for verify-* profiles")
     parser.add_argument("--wordlist", type=Path, help="wordlist used only by content-discovery; DNS uses active_dns_discovery.wordlist")
     parser.add_argument("--max-requests", type=int, default=None, help="maximum wordlist entries consumed by content-discovery; overrides TARGET.yaml")
+    parser.add_argument("--governance-mode", choices=["off", "shadow", "enforce"], default="shadow", help="record deterministic policy decisions; enforce blocks non-permit outcomes before profile tools run")
+    parser.add_argument("--governance-contract", type=Path, help="JSON Action Contract required by --governance-mode enforce for networked profiles")
     args = parser.parse_args()
     scope = load_yaml(args.scope)
     # Relative local paths are always relative to the repository, not the terminal's current directory.
@@ -564,6 +568,43 @@ def main() -> int:
     for directory in (run_dir / "raw", run_dir / "sarif", run_dir / "logs", run_dir / "evidence"):
         directory.mkdir(parents=True, exist_ok=True)
     shutil.copy2(args.scope, run_dir / "scope.yaml")
+    contract_path = args.governance_contract.expanduser() if args.governance_contract else None
+    if contract_path and not contract_path.is_absolute():
+        contract_path = WORKBENCH_ROOT / contract_path
+    decision, contract = evaluate_governance(args.scope, scope, args.profile, mode=args.governance_mode, contract_path=contract_path, skill_id="web-mining", run_id=run_dir.name)
+    write_governance_artifacts(run_dir, decision, contract)
+    governance_summary = {
+        "mode": decision["mode"],
+        "outcome": decision["outcome"],
+        "intent_fingerprint": decision["intent_fingerprint"],
+        "contract_id": decision["contract_id"],
+        "reason": decision["reason"],
+        "skill_id": decision["intent"]["skill_id"],
+        "run_id": decision["intent"]["run_id"],
+        "scope_manifest_sha256": decision["intent"]["scope_manifest_sha256"],
+        "target_set_hash": decision["intent"]["target_set_hash"],
+        "action_class": decision["intent"]["action_class"],
+        "evidence_reference": decision["intent"]["evidence_reference"],
+    }
+    if args.governance_mode == "enforce" and decision["outcome"] not in {"PERMIT_AND_LOG", "PERMIT_AND_NOTIFY"}:
+        manifest = {
+            "schema_version": 1,
+            "run_id": run_dir.name,
+            "profile": args.profile,
+            "scope": str(args.scope),
+            "local_tool_status": [],
+            "hexstrike_status": args.hexstrike_status,
+            "governance": governance_summary,
+            "status": "blocked-policy",
+        }
+        write_json(run_dir / "run-manifest.json", manifest)
+        write_governance_artifacts(run_dir, decision, contract, execution={
+            "status": "blocked-policy",
+            "verification_status": "not-run",
+            "reason": decision["reason"],
+        })
+        print(json.dumps(manifest, ensure_ascii=False, indent=2), file=sys.stderr)
+        return 4
     template_meta = _load_template(args.profile, run_dir)
     statuses: list[dict[str, Any]] = []
     asset_candidates: list[dict[str, Any]] = []
@@ -599,10 +640,15 @@ def main() -> int:
         else:
             configured_limit = int(((scope.get("content_discovery") or {}).get("max_requests", 300)))
             _content_discovery(scope, run_dir, statuses, wordlist, max(1, min(args.max_requests if args.max_requests is not None else configured_limit, 10_000)))
-    manifest = {"schema_version": 1, "run_id": run_dir.name, "profile": args.profile, "scope": str(args.scope), "local_tool_status": statuses, "hexstrike_status": args.hexstrike_status, "asset_candidates": {"count": len(asset_candidates), "path": str(run_dir / "raw" / "asset-candidates.json") if args.profile == "active-dns-discovery" else None}}
+    manifest = {"schema_version": 1, "run_id": run_dir.name, "profile": args.profile, "scope": str(args.scope), "local_tool_status": statuses, "hexstrike_status": args.hexstrike_status, "asset_candidates": {"count": len(asset_candidates), "path": str(run_dir / "raw" / "asset-candidates.json") if args.profile == "active-dns-discovery" else None}, "governance": governance_summary}
     if template_meta:
         manifest["template_applied"] = template_meta["template"]
     write_json(run_dir / "run-manifest.json", manifest)
+    write_governance_artifacts(run_dir, decision, contract, execution={
+        "status": "failed" if any(item.get("status") == "failed" for item in statuses) else "completed",
+        "verification_status": "unverified",
+        "tool_status_count": len(statuses),
+    })
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
     return 0 if not any(item.get("status") == "failed" for item in statuses) else 1
 

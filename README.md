@@ -59,7 +59,7 @@ python .\scripts\install_agent.py hermes
 python .\scripts\install_agent.py openclaw
 ```
 
-Hermes can also install the publishable flat skills from Git: `hermes skills tap add OWNER/web-vuln-mining`, then `hermes skills install web-mining` and `hermes skills install pentest-orchestrator`. OpenClaw can install the root Skill with `openclaw skills install git:OWNER/web-vuln-mining@main --global`.
+Hermes can also install the maintained publishable skill from Git: `hermes skills tap add OWNER/web-vuln-mining`, then `hermes skills install web-mining`. The earlier pentest router/executor pair is archived and must not be installed or enabled. OpenClaw can install the root Skill with `openclaw skills install git:OWNER/web-vuln-mining@main --global`.
 
 ## Configuration zone
 

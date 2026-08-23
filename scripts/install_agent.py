@@ -14,7 +14,7 @@ from pathlib import Path
 MANAGED_BEGIN = '# BEGIN web-vuln-mining managed block'
 MANAGED_END = '# END web-vuln-mining managed block'
 # HERMES_SKILLS are copied as flat directories for Hermes discovery.
-HERMES_SKILLS = ('web-mining', 'pentest-orchestrator', 'pentest-hexstrike-executor')
+HERMES_SKILLS = ('web-mining',)
 # ============================================================================
 
 ROOT = Path(__file__).resolve().parents[1]

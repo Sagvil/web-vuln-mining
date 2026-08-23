@@ -3,7 +3,7 @@
   "groupings": [
     {
       "title": "Scoped Security Assessment v3",
-      "skills": ["pentest-orchestrator", "web-mining", "pentest-hexstrike-executor"]
+      "skills": ["web-mining"]
     }
   ]
 }

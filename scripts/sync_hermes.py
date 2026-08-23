@@ -21,10 +21,10 @@ from common import WORKBENCH_ROOT
 # tests or a separate server without editing repository files.
 HERMES_HOME_ENV = 'HERMES_HOME'
 HEXSTRIKE_POLICY_ROOT_ENV = 'HEXSTRIKE_POLICY_ROOT'
-# RUNTIME_SKILLS are installed as first-level directories for Hermes discovery.
-RUNTIME_SKILLS = ('web-mining', 'pentest-orchestrator', 'pentest-hexstrike-executor')
-# LEGACY_NESTED_SKILL is archived after canonical flat web-mining is installed.
-LEGACY_NESTED_SKILL = Path('skills/pentest/web-mining')
+# RUNTIME_SKILLS are the only maintained first-level directories for Hermes
+# discovery.  The early pentest router/executor pair is archival material and
+# must never be installed, enabled, or removed by this synchronizer.
+RUNTIME_SKILLS = ('web-mining',)
 # BACKUP_PREFIX identifies only backups owned by this synchronizer.
 BACKUP_PREFIX = 'web-mining-v3-'
 # ============================================================================
@@ -77,53 +77,6 @@ def snapshot(backup: Path, targets: list[Path]) -> list[dict[str, Any]]:
     return entries
 
 
-def remove_disabled_skill(config_path: Path, skill: str) -> None:
-    """Remove exactly one item under skills.disabled without reformatting config."""
-    current = config_path.read_text(encoding='utf-8') if config_path.exists() else ''
-    lines = current.splitlines(keepends=True)
-    output: list[str] = []
-    skills_indent: int | None = None
-    disabled_indent: int | None = None
-    found_skills = False
-    found_disabled = False
-    disabled_line_index: int | None = None
-    disabled_key_indent: int | None = None
-    disabled_has_items = False
-    for line in lines:
-        stripped = line.strip()
-        indent = len(line) - len(line.lstrip(' '))
-        if stripped == 'skills:' and not line.lstrip().startswith('#'):
-            skills_indent, disabled_indent, found_skills = indent, None, True
-        elif skills_indent is not None and indent <= skills_indent and stripped and not line.lstrip().startswith('#'):
-            skills_indent, disabled_indent = None, None
-        if skills_indent is not None and stripped == 'disabled:' and indent > skills_indent:
-            disabled_indent, found_disabled = indent, True
-            disabled_key_indent = indent
-            output.append(line)
-            disabled_line_index = len(output) - 1
-            continue
-        if disabled_indent is not None and indent <= disabled_indent and stripped and not line.lstrip().startswith('#'):
-            disabled_indent = None
-        if disabled_indent is not None and stripped.startswith('- '):
-            if stripped == f'- {skill}':
-                continue
-            disabled_has_items = True
-        output.append(line)
-    if found_disabled and disabled_line_index is not None and disabled_key_indent is not None and not disabled_has_items:
-        output[disabled_line_index] = f"{' ' * disabled_key_indent}disabled: []\n"
-    if not found_skills:
-        if output and not output[-1].endswith('\n'):
-            output[-1] += '\n'
-        output += ['\nskills:\n', '  disabled: []\n']
-    elif not found_disabled:
-        for index, line in enumerate(output):
-            if line.strip() == 'skills:':
-                output.insert(index + 1, '  disabled: []\n')
-                break
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(''.join(output), encoding='utf-8')
-
-
 def inventory_skills(skills_root: Path) -> set[str]:
     if not skills_root.is_dir():
         return set()
@@ -138,7 +91,7 @@ def classify_skill(name: str, prior: dict[str, str]) -> str:
         return 'history'
     if name in {'claude-code-router', 'memory-governance'}:
         return 'system'
-    if name.startswith('pentest-') or name.startswith('butian-') or name in {'authorized-web-assessment-gate', 'web-mining', 'pentest-orchestrator'}:
+    if name.startswith('pentest-') or name.startswith('butian-') or name in {'authorized-web-assessment-gate', 'web-mining'}:
         return 'pentest'
     return prior.get(name, 'system')
 
@@ -151,14 +104,6 @@ def _yaml_mapping(path: Path) -> dict[str, Any]:
     except (OSError, yaml.YAMLError):
         return {}
     return value if isinstance(value, dict) else {}
-
-
-def disabled_skills(config_path: Path) -> set[str]:
-    """Read only skills.disabled so comments or unrelated keys do not affect check."""
-    config = _yaml_mapping(config_path)
-    skills = config.get('skills', {})
-    disabled = skills.get('disabled', []) if isinstance(skills, dict) else []
-    return {str(item) for item in disabled} if isinstance(disabled, list) else set()
 
 
 def _registry_membership(path: Path) -> tuple[dict[str, str], bool]:
@@ -190,7 +135,7 @@ def registry_check(skills_root: Path, wiki_root: Path) -> dict[str, Any]:
     governed = {
         name for name in inventory
         if name.startswith('pentest-') or name.startswith('butian-')
-        or name in {'authorized-web-assessment-gate', 'web-mining', 'pentest-orchestrator', 'agent-history-ingest', 'claude-code-router', 'memory-governance'}
+        or name in {'authorized-web-assessment-gate', 'web-mining', 'agent-history-ingest', 'claude-code-router', 'memory-governance'}
     }
     classifications = all(runtime_members.get(name) == classify_skill(name, {}) for name in governed)
     runtime_inventory_match = set(runtime_members) == inventory and not runtime_duplicate
@@ -248,7 +193,7 @@ def write_registry(skills_root: Path, wiki_root: Path) -> list[Path]:
 
 
 def desired_targets(hermes_home: Path, policy_root: Path, wiki_root: Path) -> list[Path]:
-    return [*(hermes_home / 'skills' / name for name in RUNTIME_SKILLS), hermes_home / LEGACY_NESTED_SKILL, hermes_home / 'config.yaml', hermes_home / 'agent-hooks' / 'hexstrike_gate.py', policy_root / 'hexstrike_policy_mcp.py', hermes_home / 'skills' / 'skills-registry.yaml', wiki_root / 'systems' / 'skills-registry.yaml', wiki_root / 'operations' / 'hermes-web-mining-v3-20260807.md']
+    return [*(hermes_home / 'skills' / name for name in RUNTIME_SKILLS), hermes_home / 'agent-hooks' / 'hexstrike_gate.py', policy_root / 'hexstrike_policy_mcp.py', hermes_home / 'skills' / 'skills-registry.yaml', wiki_root / 'systems' / 'skills-registry.yaml', wiki_root / 'operations' / 'hermes-web-mining-v3-20260807.md']
 
 
 def source_targets(hermes_home: Path, policy_root: Path) -> list[tuple[Path, Path]]:
@@ -264,17 +209,10 @@ def check(hermes_home: Path, policy_root: Path, wiki_root: Path | None = None) -
         target_file = target / 'SKILL.md' if target.is_dir() else target
         source_hash, target_hash = sha256(source_file), sha256(target_file)
         rows.append({'source': str(source_file), 'target': str(target_file), 'source_sha256': source_hash, 'target_sha256': target_hash, 'match': source_hash is not None and source_hash == target_hash})
-    config = hermes_home / 'config.yaml'
-    disabled = sorted(disabled_skills(config))
-    legacy = (hermes_home / LEGACY_NESTED_SKILL).exists()
     registry = registry_check(hermes_home / 'skills', wiki_root)
     result = {
-        'in_sync': all(row['match'] for row in rows) and 'pentest-orchestrator' not in disabled and not legacy and registry['ok'],
+        'in_sync': all(row['match'] for row in rows) and registry['ok'],
         'files': rows,
-        'config': str(config),
-        'disabled_skills': disabled,
-        'legacy_nested_skill': legacy,
-        'pentest_orchestrator_disabled': 'pentest-orchestrator' in disabled,
         'registry': registry,
     }
     return result, 0 if result['in_sync'] else 2
@@ -288,12 +226,6 @@ def apply(hermes_home: Path, policy_root: Path, wiki_root: Path, restart_gateway
         if not source.exists():
             raise FileNotFoundError(f'missing canonical source: {source}')
         copy_path(source, target)
-    legacy = hermes_home / LEGACY_NESTED_SKILL
-    if legacy.exists():
-        remove_path(legacy)
-        if legacy.parent.exists() and not any(legacy.parent.iterdir()):
-            legacy.parent.rmdir()
-    remove_disabled_skill(hermes_home / 'config.yaml', 'pentest-orchestrator')
     registries = write_registry(hermes_home / 'skills', wiki_root)
     commit = subprocess.run(['git', '-C', str(WORKBENCH_ROOT), 'rev-parse', 'HEAD'], capture_output=True, text=True, check=False).stdout.strip()
     changelog = wiki_root / 'operations' / 'hermes-web-mining-v3-20260807.md'
@@ -308,7 +240,7 @@ backup_id: {backup.name}
 # Hermes Web-Mining v3 Deployment
 
 - Canonical flat skills: {', '.join(RUNTIME_SKILLS)}
-- Legacy nested web-mining skill archived in backup `{backup}`.
+- Early pentest skills are intentionally outside this synchronizer; it never enables or changes their disabled configuration.
 - HexStrike gate deployed in audit mode; local Profiles no longer require a remote job.
 - Registry rebuilt from first-level runtime skills and mirrored to the Wiki.
 - Registry files: {', '.join(str(path) for path in registries)}

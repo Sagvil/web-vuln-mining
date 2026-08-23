@@ -324,10 +324,10 @@ out.write_text('<nmaprun/>', encoding='utf-8')
             (hermes_home / 'config.yaml').write_text('skills:\n  disabled:\n    - pentest-orchestrator\n    - unrelated\n', encoding='utf-8')
             backup, result = sync_hermes.apply(hermes_home, policy_root, wiki_root, False)
             self.assertTrue((hermes_home / 'skills' / 'web-mining' / 'SKILL.md').is_file())
-            self.assertFalse((hermes_home / 'skills' / 'pentest' / 'web-mining').exists())
+            self.assertTrue((hermes_home / 'skills' / 'pentest' / 'web-mining' / 'SKILL.md').is_file())
             self.assertTrue((hermes_home / 'skills' / 'unrelated' / 'SKILL.md').is_file())
             config = (hermes_home / 'config.yaml').read_text(encoding='utf-8')
-            self.assertNotIn('pentest-orchestrator', config)
+            self.assertIn('pentest-orchestrator', config)
             self.assertIn('unrelated', config)
             registry = yaml.safe_load((hermes_home / 'skills' / 'skills-registry.yaml').read_text(encoding='utf-8'))
             category_by_skill = {name: category for category, names in registry['categories'].items() for name in names}
@@ -344,7 +344,7 @@ out.write_text('<nmaprun/>', encoding='utf-8')
             self.assertTrue((hermes_home / 'skills' / 'pentest' / 'web-mining' / 'SKILL.md').is_file())
             self.assertTrue((hermes_home / 'skills' / 'unrelated' / 'SKILL.md').is_file())
 
-    def test_sync_empty_disabled_list_remains_yaml_list(self) -> None:
+    def test_sync_preserves_disabled_archived_skills(self) -> None:
         with tempfile.TemporaryDirectory() as raw_temp:
             temp = Path(raw_temp)
             hermes_home, policy_root, wiki_root = temp / 'hermes', temp / 'policy', temp / 'wiki'
@@ -352,7 +352,7 @@ out.write_text('<nmaprun/>', encoding='utf-8')
             (hermes_home / 'config.yaml').write_text('skills:\n  disabled:\n    - pentest-orchestrator\n', encoding='utf-8')
             sync_hermes.apply(hermes_home, policy_root, wiki_root, False)
             config = yaml.safe_load((hermes_home / 'config.yaml').read_text(encoding='utf-8'))
-            self.assertEqual(config['skills']['disabled'], [])
+            self.assertEqual(config['skills']['disabled'], ['pentest-orchestrator'])
 
 
 if __name__ == '__main__':
