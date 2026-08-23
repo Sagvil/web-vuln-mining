@@ -1,7 +1,7 @@
 ---
 name: xss-injection
 category: xss
-source: 渗透/juice-shop-closeout/patterns/xss.md
+source: 渗透/juice-shop-closeout/patterns/ssrf-ssti.md
 verified_in: [juice-shop-xss-9challenges]
 src_value: high
 severity_ceiling: critical
@@ -46,3 +46,16 @@ payload_count: 6
 - 服务端判定：响应 200/201 + 挑战/业务状态变化（如 modified>1、solved=true）
 - 持久化验证：重新 GET 目标资源，响应含**字面 payload**（实体编码不算数）
 - 取证：payload、请求、响应三件套存入 evidence/<挑战>/ 目录
+
+## 4. 证据要求
+
+按 `evidence-record.md`：
+- 基线请求 + XSS payload 请求完整对照
+- 响应摘录显示持久化存储值（字面 payload 在数据库/页面回显）
+- 绕过类证据附 sanitizer 版本（package.json 摘录）与绕过原理说明
+
+## 5. SRC 适用边界
+
+- 适用：任何用户输入持久化/反射的 Web 应用（评论、反馈、注册字段、搜索、头注入）
+- 不适用：纯静态站、无渲染输出的 API-only 后端
+- ⚠️ 敏感操作：存储型 XSS 只做证明（alert/iframe 最小载荷），不植入窃密脚本；头注入注意响应头覆盖范围
