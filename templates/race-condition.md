@@ -12,12 +12,13 @@ payload_count: 1
 # 竞态条件验证剧本
 
 > 来源：OWASP Juice Shop 实战（Multiple Likes，id=54）。核心原理：服务器检查-更新操作非原子，并发绕过限制。
-> **实测记录（2026-08-23, Juice Shop 20.1.1）**：⚠️ 未完全验证——新版 review 数据结构已变（`likesCount`/`likedBy`/`_id`，旧版为 `likes`/`id`），且并发批量请求易被安全审批门拦截。以下为模板脚本与已知差异。
+> **实测记录（2026-08-23, Juice Shop 20.1.1）**：✅ **验证通过**——`POST /rest/products/reviews`（like 接口，body `{"id":"<review_id>"}`）3 线程并发点赞同一 review，`likedBy` 数组竞态（服务端 150ms 人工延迟放大窗口）→ `count > 2` → **timingAttack 解锁**。数据结构确认：新版用 `_id` + `likesCount` + `likedBy`（旧版 `id` + `likes`）。
 
 ## 0. 靶场实测要点（先读）
 
 - **先看目标数据结构再写脚本**：新版 review 用 `_id` + `likesCount`（旧版 `id` + `likes`）——脚本里引用的字段名必须先 `curl` 确认，否则 500
-- **并发脚本可能触发安全门**：15 线程 Barrier 批量请求在受控环境可能被审批/风控拦截——本地靶场可降低线程数（5-8）并注明用途；真实 SRC 场景更需谨慎（可能触发风控封号）
+- **3 线程即够（实测）**：判定 `likedBy.filter(email===me).length > 2`——3 个并发请求通过 `includes` 预检后各自 push 同邮箱 → count=3。**线程数不必多**，竞态窗口内到达即可；服务端常有人工延迟（本靶场 sleep 150ms）放大窗口
+- **预检在更新前**：`findOne → likedBy.includes(email) → update $inc → sleep → 再读 → push → update $set`——竞态点在第 1 次读（预检）到最终写之间；并发请求都通过预检即绕过
 - **串行对照是判定关键**：必须证明"串行请求同样操作被拒绝，并发才绕过"——否则可能是逻辑漏洞而非竞态
 
 ## 1. 识别
