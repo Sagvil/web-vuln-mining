@@ -63,3 +63,23 @@ reproduce_steps:                            # 3-5 步复现
 - 适用：所有提交到 SRC 平台的漏洞报告（补天/漏洞盒子/众测）
 - 不适用：内部排查记录（可简化为摘要）
 - ⚠️ 平台草稿只在 triage 三条件全满足时生成；永不存储平台凭据、永不调用平台提交 API
+
+## 6. 取证实战技巧（2026-08 三靶场 214 关验证）
+
+回显不可用时按优先级换取证通道，**不要死磕一种回显**：
+
+| 回显失效场景 | 替代取证通道 | 实战场次 |
+|---|---|---|
+| 报错/回显被禁用（PHP 8.3 mysqli 不显示错误） | **时间盲注**（`AND sleep(2)` 对比延迟）或**数据修改实锤**（UPDATE 改 admin 密码后登录验证） | SQLi-Labs Less-5/6/17 |
+| 回显被数组混淆锁死（`$unames[$row['id']]`） | **extractvalue 报错注入** → 数据落在 PHP 异常日志侧，`grep "XPATH syntax error: '~(.*?)'"` 提取 | SQLi-Labs Less-58~65 |
+| 注入无回显且布尔无差异（MySQL 8 ORDER BY） | **排序差异验证**：`ORDER BY 2 AND 1=1`（表达式=1→按列2排）vs `2 AND 1=2`（=0→插入序）输出顺序对比 | SQLi-Labs Less-48/49 |
+| NoSQL/布尔场景 | **三态对比**：正常 1 条 / `'||false||'` 空 / `'||true||'` 全部——三态齐全即 confirmed | Juice Shop NoSQL |
+| 头/ Cookie 注入无页面回显 | **DB 直查实锤**：注入落库后 `mysql CLI SELECT` 验证行数据 | SQLi-Labs Less-18~22 |
+| 前端 DOM 判定挑战 | **socket.io 事件直发**：`socket.emit('verifyXxxChallenge', payload)` 无需浏览器即解锁 | Juice Shop localXss/xssBonus |
+| 挑战类关卡（随机表 + 尝试次数限制） | **日志侧提取流水线**：php -S 日志落盘 → 注入 → grep 提取表名/列名/secret → 提交 | SQLi-Labs Less-54~65 |
+
+**通用原则**：
+- 服务端判定信号（挑战 solved、状态码+响应差异、DB 行变化）强于自我观察；判定信号必须有**可复现输入 + 对照差异**双要素
+- 每条证据链保留：payload 原文 + 请求（含编码方式，标注 requests/curl 差异）+ 响应摘录/日志摘录 + DB 或文件落库验证
+- 编码坑要记录在证据里：`requests` 会二次编码 `%09`、base64 cookie 的 `=` 会被编码（改用 curl 原样发送）、URL fragment 的 `#` 需 `%23`
+- 尝试次数限制类挑战（如 5~14 次）：把提取次数压缩到最少（GROUP_CONCAT 合并列名），超限就 reset 重来，不浪费次数

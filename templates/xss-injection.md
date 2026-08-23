@@ -11,16 +11,19 @@ payload_count: 6
 
 # XSS 验证剧本（服务端判定 + 绕过实战）
 
-> 来源：OWASP Juice Shop 20.1.1 九连测（2026-08-23）。覆盖持久化/反射/DOM/存储型 XSS 的服务端判定绕过。
+> 来源：OWASP Juice Shop 20.1.1 九连测（2026-08-23）+ Pikachu XSS 十形态（2026-08-23）。覆盖持久化/反射/DOM/存储型 XSS 的服务端判定绕过与 PHP 属性注入。
 > **实测记录**：restfulXss（POST /api/Products description）、persistedXssUser（注册 email）、reflectedXss（track-order id）、httpHeaderXss（True-Client-IP 头）、usernameXss（CSP 注入 + RegEx 绕过）、persistedXssFeedback（sanitize-html 1.4.2 非递归净化绕过）、localXss/xssBonus（socket.io 事件直发）、videoXss（ZIP Slip 写字幕）——9/9 ✅
+> **Pikachu 十形态（2026-08-23）**：反射 GET/POST、存储型、DOM、盲打、`xss_02` 单引号属性注入等 10/10 ✅——**PHP 侧经验见下方"PHP/属性注入"节**
 
 ## 0. 靶场实测要点（先读）
 
+- **PHP `htmlspecialchars` 只转义双引号，不转义单引号**（xss_02 实测）：`htmlspecialchars($x)` 默认 ENT_QUOTES 不开启——属性上下文用单引号闭合注入：`name=' onmouseover='alert(1)`——**先看转义函数的 flags 再决定闭合引号**
+- **属性注入优先测单引号**：`<input value='<?=$x?>'>` 场景（单引号包裹）下双引号 payload 无效，`' on事件='` 一击即中
+- **DOM XSS 判定事件可 socket.io 直发**（Juice Shop localXss/xssBonus 实测）：前端 `socket.emit('verifyLocalXssChallenge', payload)` → 服务端事件处理器判定——**无需浏览器**，socket.io-client 直连发射即解锁；Bonus payload 在 config `challenges.xssBonusPayload`
 - **sanitize-html <2.x 非递归净化绕过**（persistedXssFeedback 实测）：`<<script>Foo</script>iframe src="javascript:alert(`xss`)">` —— 首 `<` 成文本，`<script>` 触发 raw-text 丢弃，闭合后残留文本与首 `<` 拼出完整 `<iframe ...>`。**先查 package.json 的 sanitize 版本再决定 payload 路线**
 - **homegrown RegEx sanitizer 用 `\u003c` 转义绕过**（usernameXss 实测）：`<(?:\w+)\W+?[\w]` 类正则只认字面 `<`——存储 `#{'\u003cscript>...'}`，渲染时 eval/模板引擎解码还原完整标签
 - **CSP 注入联动**：profileImage 可控时注入 `'; script-src 'unsafe-inline'` 改写 CSP 头（`/[ ;]*script-src(.)*'unsafe-inline'/` 判定）
 - **头注入先确认头名**（httpHeaderXss 实测）：`True-Client-IP` 头（不是 User-Agent）——先读源码确认读取的头字段再注入
-- **前端判定挑战可 socket.io 直发**（localXss/xssBonus 实测）：前端 `socket.emit('verifyLocalXssChallenge', payload)` → 服务端事件处理器判定——**无需浏览器**，socket.io-client 直连发射即解锁；Bonus payload 在 config `challenges.xssBonusPayload`
 - **文件写入联动**（videoXss 实测）：ZIP 上传 ZIP Slip（`../../frontend/dist/...` 站内路径）可写任意站内文件——字幕/模板文件注入 payload 后访问渲染页触发判定；同接口另一条目写 `ftp/legal.md` 解锁 fileWrite
 - **验证 CAPTCHA 类接口**：提交前先 GET `/rest/captcha`（响应自带答案）再 POST，避免 401
 
