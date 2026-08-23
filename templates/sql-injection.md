@@ -13,9 +13,19 @@ payload_count: 4
 
 > 来源：SQLi-Labs 五步方法论 + OWASP Juice Shop 实战 payload 合并。先识别上下文，再选 payload，最小破坏证明。
 > **实测记录（2026-08-23, Juice Shop 20.1.1）**：登录接口 `email: "admin@juice-sh.op'--"` 绕过密码校验，解锁 `Login Admin` 挑战。✅
+> **实测记录（2026-08-23, SQLi-Labs 1-65 全关重打）**：宽字节/堆叠/二次注入/ORDER BY/随机表挑战全验证。✅
 
 ## 0. 靶场实测要点（先读）
 
+- **SQLi-Labs 65 关全验证（2026-08-23）**：Less-1~22 基础注入（回显/报错/盲注/头注入/cookie/base64 cookie）、Less-23~31 过滤绕过（注释符/`or`/空格/select/union 过滤）、Less-32~37 宽字节+转义、Less-38~45 堆叠、Less-46~53 ORDER BY、Less-54~65 随机表挑战
+- **宽字节注入三要素（Less-32/33/34 实测）**：① 连接字符集 GBK（`mysqli_set_charset($con,'gbk')` 或老环境默认）；② `%df%27` 原始字节（requests 会把 `%xx` 二次编码成 `%25xx`，用 Python 真 `\xdf` 或 curl）；③ **id 用 `0` 开头**（id=0 无结果才触发 UNION 回显；`1%df%27` 会命中 id=1 显示 Dumb 造成假象）
+- **PHP 8.3 mysqlnd 加固（Less-36/37 环境限制）**：`mysqli_real_escape_string` 会转义 GBK 首字节（`\xdf` → `\x5c\xdf`），经典宽字节 payload 失效——addslashes 版（32/33/34）不受影响
+- **堆叠注入（Less-38~45）**：`1';INSERT INTO users(id,username,password) VALUES(999,'x','y')-- ` 验证 DB 落库（mysqli_multi_query）；POST 场景注意 username 可能被转义但 **password 裸拼**（注入点在 passwd）
+- **二次注入（Less-24）**：注册 `admin'#`（INSERT 双引号包裹下单引号无害）→ 改密码时 username 单引号拼接 `#` 注释掉密码校验 → 任意改 admin 密码
+- **ORDER BY 注入语义（Less-46~53）**：裸数字=列号（`ORDER BY 0` 报错 1054）；表达式=排序值（`ORDER BY 2 AND 1=1` → 键 1 按 id 排序 vs `ORDER BY 2` 按 username 排序——排序差异证明注入）；堆叠可用
+- **随机表挑战（Less-54~65）**：challenges 库随机表名/secret 列名/24 位密钥；UNION 提取 information_schema 表名→列名（GROUP_CONCAT 一次取全）→secret→提交；**回显被数组映射锁死时（`$unames[$row['id']]`）改用 extractvalue 报错注入，数据在 PHP 异常日志侧**（php -S 重定向日志后 grep `XPATH syntax error: '~值'`）
+- **requests 二次编码坑**：params 传 `%09` 会被编码成 `%2509`——用 Python 真 `\t` 或 curl 原样发送
+- **PHP 8.3 兼容修复**：`mysqli_connect_errno($con)` → `mysqli_connect_errno()`（老靶场代码批量报错）
 - **先分清 SQL vs NoSQL**：同名"搜索"接口可能走 NoSQL，也可能走 SQL——**用 `'` 报错信息区分**：`SQLITE_ERROR: incomplete input` 是 SQL（Juice Shop 20.1.1 `/rest/products/search` 实测为 SQLite）；表达式拼接/500 无 SQL 错误是 NoSQL。**不要凭版本记忆下结论，先用报错定性**
 - **Pikachu 十种注入形态全实测（2026-08-23）**：数字型（`id=1 or 1=1`）、字符型（`' or 1=1-- `）、搜索型（`%' or 1=1-- `）、括号型（`') or 1=1-- `）、**宽字节**（`set character_set_client=gbk` 后 `%df%27` 原始字节发送吃转义符）、delete 型（`id=1 or 1=1`）、布尔盲注（`and 1=1/1=2` 响应差异）、时间盲注（`and sleep(3)`）、update 型（`#` 注释后续字段）、header 型（UA 注入补右括号 `x','y','z') #`）
 - **宽字节注入两个坑**：① 连接字符集必须 GBK（utf8 下 `%df` 无效，MySQL 按 utf8 校验替换非法字节）；② `%df%27` 必须**原始字节**发送（URL 编码工具会把 % 二次编码成 %25，注入失败）
