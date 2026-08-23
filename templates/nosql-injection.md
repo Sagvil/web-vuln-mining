@@ -12,6 +12,13 @@ payload_count: 2
 # NoSQL 注入验证剧本
 
 > 来源：OWASP Juice Shop 实战（MarsDB）。核心原理：NoSQL 数据库未对查询参数做类型检查，直接传入对象/表达式。
+> **实测记录（2026-08-23, Juice Shop 20.1.1）**：`/rest/track-order/' || true || '` 返回所有用户订单（含脱敏邮箱、产品明细），解锁 `NoSQL Exfiltration` 挑战。✅ 搜索 API `?q='||true||'` 返回全部产品。✅
+
+## 0. 靶场实测要点（先读）
+
+- **数据结构版本差异**：新版 review/order 主键为 `_id`（旧版为 `id`）——payload 引用字段前先 `curl` 看真实结构
+- **`|| true ||` 系列是布尔证明**：正常查询返回 1 条、`'||false||'` 返回空、`'||true||'` 返回全部——三态对比即 confirmed 证据，无需提取数据
+- **触发面排序**：搜索/筛选接口（q、filter、where 参数）优先测，登录接口的 NoSQL 操作符注入（`{"$ne": null}`）其次
 
 ## 1. 识别
 

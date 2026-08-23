@@ -12,6 +12,14 @@ payload_count: 4
 # SQL 注入验证剧本（方法论增强版）
 
 > 来源：SQLi-Labs 五步方法论 + OWASP Juice Shop 实战 payload 合并。先识别上下文，再选 payload，最小破坏证明。
+> **实测记录（2026-08-23, Juice Shop 20.1.1）**：登录接口 `email: "admin@juice-sh.op'--"` 绕过密码校验，解锁 `Login Admin` 挑战。✅
+
+## 0. 靶场实测要点（先读）
+
+- **先分清 SQL vs NoSQL**：同名"搜索"接口可能走 NoSQL（Juice Shop 的 `/rest/products/search` 是 MarsDB 注入，不是 SQLi）——用 `'` 报错信息区分：`SQLITE_ERROR` 是 SQL，表达式拼接是 NoSQL
+- **登录 SQLi 是最稳入口**：字符串拼接型登录接口（`'--` / `' OR 1=1--`）几乎必测，可解锁管理员登录类挑战
+- **报错信息泄露堆栈**：SQLite 错误页会直接输出 `SQLITE_ERROR: near "UNION": syntax error`——用错误信息快速确认 DB 类型与语法上下文
+- **列数枚举对 SQLite 有效**：`ORDER BY N--` 递增直到 500，即确定列数（本版本 products 搜索是 NoSQL，此技巧适用于 SQL 端点）
 
 ## 1. 识别
 

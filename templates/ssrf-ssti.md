@@ -12,6 +12,15 @@ payload_count: 2
 # SSRF + SSTI 验证剧本
 
 > 来源：OWASP Juice Shop 实战。两个陷阱（urlencoded 注册顺序、SSTI 语法探测）为靶场实战发现。
+> **实测记录（2026-08-23, Juice Shop 20.1.1）**：SSRF——`POST /profile/image/url`（urlencoded）触发服务端请求攻击者可控 URL（本地监听器收到 `GET /proof.txt`）✅；SSTI——用户名 `#{7*7}` 在 `/profile` 页面回显 49 ✅。
+
+## 0. 靶场实测要点（先读）
+
+- **认证必须用 Cookie 会话**：`security.authenticatedUsers.get(req.cookies.token)` 只认 Cookie，`Authorization` header 不够。触发方式：先带 `Authorization: Bearer <token>` 访问任意页面让全局中间件种 cookie，失败则**手动带 `Cookie: token=<jwt>`** 直接请求
+- **`Blocked illegal activity` 是认证错误不是 WAF**：看到此错误先检查 cookie 会话，别误判为防护拦截
+- **SSRF 端点无 URL 过滤**：`fetch(url)` 直连——用本地监听器（`python3 -m http.server 9001`）证明出网，比打内网地址更干净
+- **SSTI 验证链**：`POST /profile`（JSON body `{"username":"#{7*7}"}`）→ `GET /profile` 页面回显 49。注意同一端点先检查 SSTI 再检查 SSRF（服务端检查顺序）
+- **挑战解锁需要精确 solve key**：`/solve/challenges/server-side?key=<实际key>`，key 从挑战定义中取，不能猜
 
 ## 1. 识别
 

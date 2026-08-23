@@ -12,6 +12,14 @@ payload_count: 3
 # JWT 攻击验证剧本
 
 > 来源：OWASP Juice Shop 实战（111/113 挑战，98.2% 完成率）。payload 已在靶场验证。
+> **实测记录（2026-08-23, Juice Shop 20.1.1）**：alg=none 解锁 `Unsigned JWT` 挑战；RS256→HS256 混淆解锁 `Forged Signed JWT` 挑战。✅
+
+## 0. 靶场实测要点（先读）
+
+- **公钥文件名因版本而异**：新版为 `encryptionkeys/jwt.pub`，旧版为 `encryptionkeys/rsa.pub`——先 `find . -iname "*.pub"` 定位
+- **伪造不存在的用户**：挑战判定依据是"用伪造 token 冒充一个库中不存在的用户"（如 `rsa_lord@juice-sh.op`），而非已有用户提权
+- **双层验证差异**：`jws.verify`（挑战层）接受 alg=none/HS256 混淆；`jsonwebtoken.verify`（会话注册层）拒绝 HS256——伪造 token 能解锁挑战、但可能种不上 cookie 会话。证明漏洞用挑战解锁或业务接口差异，不要依赖 whoami 回显
+- **whoami 接口不可靠**：对所有 token 都返回 `{"user":{}}`，不能作为成功/失败判据
 
 ## 1. 识别
 
