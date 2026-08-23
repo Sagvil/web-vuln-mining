@@ -12,7 +12,7 @@ payload_count: 3
 # JWT 攻击验证剧本
 
 > 来源：OWASP Juice Shop 实战（111/113 挑战，98.2% 完成率）。payload 已在靶场验证。
-> **实测记录（2026-08-23, Juice Shop 20.1.1）**：alg=none 解锁 `Unsigned JWT` 挑战；RS256→HS256 混淆解锁 `Forged Signed JWT` 挑战。✅
+> **实测记录（2026-08-23, Juice Shop 20.1.1，从头硬重置重打）**：alg=none（`jwt.sign(payload,'',{algorithm:'none'})`，email `jwtn3d@juice-sh.op`）解锁 `Unsigned JWT`；RS256→HS256 混淆（**用 PEM 公钥原文当 HMAC 密钥，python 手写 HS256**，email `rsa_lord@juice-sh.op`）解锁 `Forged Signed JWT`。✅ 双关重打通过
 
 ## 0. 靶场实测要点（先读）
 
