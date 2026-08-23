@@ -1,0 +1,77 @@
+---
+name: ssrf-ssti
+category: ssrf-ssti
+source: 渗透/juice-shop-closeout/patterns/ssrf-ssti.md
+verified_in: [juice-shop-073-ssrf, juice-shop-074-ssti]
+src_value: high
+severity_ceiling: high
+requires_auth: true
+payload_count: 2
+---
+
+# SSRF + SSTI 验证剧本
+
+> 来源：OWASP Juice Shop 实战。两个陷阱（urlencoded 注册顺序、SSTI 语法探测）为靶场实战发现。
+
+## 1. 识别
+
+### SSRF
+- 找「通过 URL 加载/抓取」类功能：头像 URL 上传、图片代理、PDF 生成、Webhook 回调、抓取预览
+- 测试端点往往接受 `imageUrl` / `url` / `callback` 参数
+
+### SSTI
+- 找「模板渲染用户输入」类功能：用户名/昵称显示、导出文件名、邮件模板、错误页
+- 先做无破坏探测：`#{7*7}`、`{{7*7}}`、`${7*7}`、`<%= 7*7 %>`，看是否回显 49
+
+## 2. Payload 序列
+
+```bash
+# SSRF — 注意 Content-Type 陷阱！
+# ⚠️ 靶场实战发现：某些路由的 JSON parser 注册在表单解析器之后，
+#    用 application/x-www-form-urlencoded 提交才能命中处理函数。
+POST /profile/image/url
+Content-Type: application/x-www-form-urlencoded
+Cookie: token=xxx
+
+imageUrl=http://127.0.0.1:3000/internal/admin
+```
+
+```json
+// SSTI — JSON 提交
+POST /profile
+Content-Type: application/json
+Authorization: Bearer ***
+
+{"username": "#{7*7}"}
+// 注册后访问 profile 页面，若显示 49 则模板引擎执行了表达式
+```
+
+### 陷阱清单（靶场实战）
+
+| 陷阱 | 说明 |
+|------|------|
+| urlencoded vs JSON | 路由注册顺序决定哪种 Content-Type 生效，两种都试 |
+| SSTI 语法 | 不同引擎语法不同：`#{...}`(Handlebars) / `{{...}}`(Jinja2/Twig) / `${...}`(Freemarker) |
+| 服务端检查顺序 | 同一端点可能先检查 A 再检查 B（靶场：SSTI 先于 SSRF） |
+
+## 3. 判定标准
+
+### SSRF confirmed：
+- [ ] 目标服务器主动连接了攻击者可控地址（DNS 回连 / 本地端口探测响应）
+- [ ] 或通过 URL 读取到内网/本地资源内容（如 `/etc/passwd`、云元数据 `169.254.169.254`）
+
+### SSTI confirmed：
+- [ ] 注入表达式被求值并回显结果（`7*7` → 49）
+- [ ] 至少验证两种不同表达式（排除巧合回显）
+
+## 4. 证据要求
+
+按 `evidence-record.md`：
+- SSRF：完整请求 + 回连证据（自建监听器日志 / DNS 解析记录）+ 内网响应摘录
+- SSTI：注入 payload 原文 + 回显结果摘录（页面片段）
+
+## 5. SRC 适用边界
+
+- 适用：有 URL 抓取功能的应用（SSRF）；渲染用户输入的模板（SSTI）
+- 不适用：纯静态站点、无用户输入渲染的 SPA
+- ⚠️ 敏感操作：SSRF 探测内网时只做最小验证（DNS 回连优先，避免大规模端口扫描）；云元数据读取即为高严重度，但测试时只读一个关键字段即可
