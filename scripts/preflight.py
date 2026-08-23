@@ -21,6 +21,13 @@ PROFILE_TOOLS = {
     "api": ["schemathesis", "zap"],
     "verify-xss": ["dalfox"],
     "verify-sqli": ["sqlmap"],
+    # Playbook-driven profiles: the agent executes templates/*.md steps with
+    # system tools (curl, python, jwt_tool); nothing to enforce in the tool lock.
+    "verify-jwt": [],
+    "verify-nosql": [],
+    "verify-race": [],
+    "verify-ssrf-ssti": [],
+    "verify-llm-injection": [],
     "content-discovery": ["ffuf"],
     "active-dns-discovery": [],
 }
