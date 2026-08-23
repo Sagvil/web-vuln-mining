@@ -1,0 +1,22 @@
+# oa.womanhospital.cn — flexoffice 同产品 CORS 扩展验证（C10 扩展）+ API 面探测
+name: oa-cors-20260823
+source_root: projects/womanhospital-20260809
+base_urls:
+  - https://oa.womanhospital.cn/
+include_hosts:
+  - oa.womanhospital.cn
+exclude_paths: []
+rate_limit: 2
+crawl_budget:
+  max_depth: 1
+  max_pages: 10
+profiles:
+  - content-discovery
+codeql:
+  languages: [python]
+  build_command: ""
+auth:
+  headers_file: ""
+content_discovery:
+  max_requests: 100
+  match_statuses: [200, 301, 302, 401, 403]

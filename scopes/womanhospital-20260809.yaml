@@ -1,0 +1,44 @@
+# Configuration zone: 浙大妇院 womanhospital.cn — 补天 64679 授权项目（2026-08-09 用户授权全子域）
+name: womanhospital-20260809
+source_root: projects/womanhospital-20260809
+base_urls:
+  - https://www.womanhospital.cn/
+openapi: []
+include_hosts:
+  - www.womanhospital.cn
+  - gcp.womanhospital.cn
+  - zp.womanhospital.cn
+  - oa.womanhospital.cn
+  - wxglht.womanhospital.cn
+  - ir.womanhospital.cn
+  - lac.womanhospital.cn
+  - oldwww.womanhospital.cn
+  - yun.womanhospital.cn
+  - edc.womanhospital.cn
+  - icloud.womanhospital.cn
+exclude_paths:
+  - /logout
+  - /signout
+rate_limit: 2
+crawl_budget:
+  max_depth: 2
+  max_pages: 100
+profiles:
+  - web-baseline
+  - content-discovery
+codeql:
+  languages: [python]
+  build_command: ""
+auth:
+  headers_file: ""
+content_discovery:
+  max_requests: 200
+  match_statuses: [200, 301, 302, 401, 403]
+
+active_dns_discovery:
+  # DNS-only candidate discovery; each root must be an include_hosts value or its parent domain.
+  roots: [womanhospital.cn]
+  wordlist: wordlists/dns-subdomains.txt
+  max_words: 5000
+  threads: 10
+  max_candidates: 3000

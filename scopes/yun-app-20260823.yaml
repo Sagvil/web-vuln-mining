@@ -1,0 +1,22 @@
+# yun.womanhospital.cn — 云上妇幼 /Application-Train 应用面探测（轮 1 未深入）
+name: yun-app-20260823
+source_root: projects/womanhospital-20260809
+base_urls:
+  - https://yun.womanhospital.cn/
+include_hosts:
+  - yun.womanhospital.cn
+exclude_paths: []
+rate_limit: 2
+crawl_budget:
+  max_depth: 2
+  max_pages: 20
+profiles:
+  - content-discovery
+codeql:
+  languages: [python]
+  build_command: ""
+auth:
+  headers_file: ""
+content_discovery:
+  max_requests: 100
+  match_statuses: [200, 301, 302, 401, 403]

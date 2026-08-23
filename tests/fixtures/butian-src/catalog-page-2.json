@@ -1,0 +1,10 @@
+{
+  "status": 1,
+  "data": {
+    "count": 2,
+    "current": 2,
+    "list": [
+      {"company_id": "100", "company_name": "丙公司", "avatar": "https://cdn.example/100.png"}
+    ]
+  }
+}

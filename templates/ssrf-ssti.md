@@ -21,6 +21,8 @@ payload_count: 2
 - **SSRF 端点无 URL 过滤**：`fetch(url)` 直连——用本地监听器（`python3 -m http.server 9001`）证明出网，比打内网地址更干净
 - **SSTI 验证链**：`POST /profile`（JSON body `{"username":"#{7*7}"}`）→ `GET /profile` 页面回显 49。注意同一端点先检查 SSTI 再检查 SSRF（服务端检查顺序）
 - **挑战解锁需要精确 solve key**：`/solve/challenges/server-side?key=<实际key>`，key 从挑战定义中取，不能猜
+- **XXE DoS 用 /dev/random 外部实体**（2026-08-23 实测）：libxml2 实体展开有 amplification 防护（~10MB 上限、billion laughs 全被拦），`<!ENTITY xxe SYSTEM "file:///dev/random">` 让解析器读取无限流 → vm 2s 超时 → 服务端 503 + 挑战解锁，服务不卡死
+- **XXE 文件泄露**：`<!ENTITY xxe SYSTEM "file:///etc/passwd">` 展开后响应体（410 错误页）直接回显文件内容
 
 ## 1. 识别
 

@@ -16,10 +16,12 @@ payload_count: 4
 
 ## 0. 靶场实测要点（先读）
 
-- **先分清 SQL vs NoSQL**：同名"搜索"接口可能走 NoSQL（Juice Shop 的 `/rest/products/search` 是 MarsDB 注入，不是 SQLi）——用 `'` 报错信息区分：`SQLITE_ERROR` 是 SQL，表达式拼接是 NoSQL
+- **先分清 SQL vs NoSQL**：同名"搜索"接口可能走 NoSQL，也可能走 SQL——**用 `'` 报错信息区分**：`SQLITE_ERROR: incomplete input` 是 SQL（Juice Shop 20.1.1 `/rest/products/search` 实测为 SQLite）；表达式拼接/500 无 SQL 错误是 NoSQL。**不要凭版本记忆下结论，每版必测**
 - **登录 SQLi 是最稳入口**：字符串拼接型登录接口（`'--` / `' OR 1=1--`）几乎必测，可解锁管理员登录类挑战
 - **报错信息泄露堆栈**：SQLite 错误页会直接输出 `SQLITE_ERROR: near "UNION": syntax error`——用错误信息快速确认 DB 类型与语法上下文
-- **列数枚举对 SQLite 有效**：`ORDER BY N--` 递增直到 500，即确定列数（本版本 products 搜索是 NoSQL，此技巧适用于 SQL 端点）
+- **多括号包裹的查询用 `'))` 闭合**（2026-08-23 实测）：`WHERE ((name LIKE '%Q%' OR ...) AND deletedAt IS NULL) ORDER BY name` 结构下，`q=')) ORDER BY N--` 探测列数（9 列），`q=')) UNION SELECT ...--` 注入；`--` 后直接接 `%'` 会被注释掉，无需额外闭合
+- **软删除商品可经 API 直接入篮**（Christmas Special 实测）：`POST /api/BasketItems {"ProductId": <软删除商品id>}` 不校验 deletedAt → 结算即触发业务影响判定
+- **UNION 伪造登录行**（Ephemeral Accountant 实测）：`models.sequelize.query(sql, {model, plain:true})` 场景可用 `' UNION SELECT <全列字面量>--` 伪造任意用户登录（需精确列数，User 模型 13 列）
 
 ## 1. 识别
 

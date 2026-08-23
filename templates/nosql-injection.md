@@ -18,6 +18,9 @@ payload_count: 2
 
 - **数据结构版本差异**：新版 review/order 主键为 `_id`（旧版为 `id`）——payload 引用字段前先 `curl` 看真实结构
 - **`|| true ||` 系列是布尔证明**：正常查询返回 1 条、`'||false||'` 返回空、`'||true||'` 返回全部——三态对比即 confirmed 证据，无需提取数据
+- **$where 拼接格式随版本变**（2026-08-23 实测）：`/rest/track-order/:id` 是 `this.orderId === '<id>'` 拼接——payload `1'||'1'=='1` 命中全部订单；`'||true||'` 在本版不生效（引号闭合不同），**先看源码再定 payload**
+- **更新类接口找 PATCH 别找 PUT**（实测）：`PUT /rest/products/:id/reviews` 是创建、`PATCH /rest/products/reviews` 才是更新——`{"id":{"$ne":-1},"message":"..."}` 批量改写（modified>1 即证据）
+- **NoSQL sleep 注入会崩 Node 进程**（实测教训）：marsdb `$where` 内 `sleep()` 对每条文档执行且异常未捕获 → 进程直接退出、**全部挑战进度丢失（内存态）**——DoS 验证优先用短超时/低文档数，或放最后打
 - **触发面排序**：搜索/筛选接口（q、filter、where 参数）优先测，登录接口的 NoSQL 操作符注入（`{"$ne": null}`）其次
 
 ## 1. 识别

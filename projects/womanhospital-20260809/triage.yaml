@@ -1,0 +1,123 @@
+# triage.yaml — womanhospital v4.0.0 挖掘轮 1-2（2026-08-23）
+# 提交资格门槛：status=reproduced + human_reviewed=true + scope_confirmed=true
+campaign: womanhospital-20260809
+round: 2
+run_ids:
+  - runs/20260822T170945Z-womanhospital-20260809-web-baseline
+  - runs/20260822T172054Z-womanhospital-20260809-content-discovery
+findings:
+  - id: C10
+    title: flexoffice API CORS 通配 + Allow-Credentials true 共存（www）
+    asset: www.womanhospital.cn/flexoffice/api/**
+    severity: low
+    status: reproduced
+    human_reviewed: true
+    scope_confirmed: true
+    evidence:
+      - "GET /flexoffice/api/sys/htl/actions/search/ 响应头双份 Access-Control-Allow-Origin: *"
+      - "同响应 Access-Control-Allow-Credentials: true（规范禁止组合）"
+      - "Access-Control-Allow-Methods: GET,POST,OPTIONS,PUT,DELETE,PATCH（全方法开放）"
+      - "复现端点 2 个：search/ 与 updateHits?dataId=...&type=jtjzdjl（Origin: https://evil.example.com 均反射）"
+      - "认证机制：Set-Cookie flexsid=...; Path=/flexoffice; HttpOnly; SameSite=Lax → 跨域 fetch 无法携带 flexsid → 标准 CORS 攻击链不可行"
+      - "raw: runs/20260822T170945Z-...-web-baseline/raw/zap-passive.json (Cross-Domain Misconfiguration)"
+    notes: 降级自 medium（SameSite=Lax 阻断凭据携带）；配置错误确凿（双头违反规范）——防御性报告价值
+  - id: C10a
+    title: oa flexoffice API CORS 通配（ACAO:* 全方法开放）
+    asset: oa.womanhospital.cn/flexoffice/api/**
+    severity: low
+    status: reproduced
+    human_reviewed: true
+    scope_confirmed: true
+    evidence: "401 响应头 Access-Control-Allow-Origin: * + Allow-Methods: GET,POST,OPTIONS,PUT,DELETE（Origin: https://evil.example.com 验证，无 credentials）"
+    notes: 同产品同配置；无 credentials 故影响低于 www/yun
+  - id: C14
+    title: yun 业务 API CORS 任意 Origin 反射 + credentials:true（配置缺陷，利用性受限）
+    asset: yun.womanhospital.cn/api/{train,course,exam,record,admin,config}
+    severity: low
+    status: reproduced
+    human_reviewed: true
+    scope_confirmed: true
+    evidence:
+      - "6 端点一致：access-control-allow-origin 反射请求 Origin（https://evil.example.com）+ access-control-allow-credentials: true"
+      - "OPTIONS preflight 全放行：PUT/GET 200 + allow-headers: authorization,content-type + credentials:true"
+      - "HTTP/2 401（未认证）——利用面为已登录用户浏览器跨域读取（OWASP API8 CORS 误配置）"
+      - "认证接口（/api/login /api/auth）无 CORS 反射——业务 API 网关层配置问题"
+      - "L3 认证机制分析：SPA JS 使用 localStorage 存 token + Authorization Bearer 头（非 Cookie）→ 跨域 fetch 无法自动携带凭据 → 实际利用性低"
+    notes: 降级自 medium（JS 证据链：localStorage Bearer 认证阻断标准 CORS 利用）；配置缺陷确凿，防御性报告价值
+  - id: C15
+    title: yun /Application-Train SPA 前端（无未授权 API）
+    asset: yun.womanhospital.cn/Application-Train/**
+    severity: info
+    status: closed
+    human_reviewed: true
+    scope_confirmed: true
+    notes: 全部路由 54,465B 同大小 = Vue SPA fallback；真实 API 在 /api/*（401 认证正常）
+  - id: C16
+    title: wxglht 管理后台未授权框架页（v4.0.0 复现，6 页面）
+    asset: wxglht.womanhospital.cn/admin/** + /login/super.htm
+    severity: medium
+    status: reproduced
+    human_reviewed: true
+    scope_confirmed: true
+    evidence:
+      - "6 页面未登录 200：/login/super.htm(5057B) /login/index.htm(10268B) /login/error.htm(2B=会话基线-1) /admin/index.htm(10268B) /admin/menu.htm(3881B 完整菜单) /admin/bottom.htm(3551B) /admin/defaultindex.htm(2291B) /admin/top.htm(3789B)"
+      - "v4.0.0 run: runs/20260822T182115Z-wxglht-mgmt-20260823-content-discovery"
+      - "会话校验存在（/login/error.htm 返回 -1）但管理框架页不校验——认证绕过式泄露"
+      - "数据面（user/doctor/schedule/department/order/patient/report）全 404——维持 R2 定级低危~中危"
+    notes: 较 R2 新增 admin/top.htm 第 6 页证据；微信端 /weixin/weixin.htm 404 已下线
+  - id: C17
+    title: wxglht /weixin/ 微信入口（重定向 404）
+    asset: wxglht.womanhospital.cn/weixin/**
+    severity: info
+    status: closed
+    human_reviewed: true
+    scope_confirmed: true
+    notes: index.htm 重定向至 weixin.htm（404）——微信端已下线，无接口面
+  - id: C18
+    title: yun 开放注册面（api/app/base/login/register）
+    asset: yun.womanhospital.cn/api/app/base/login/register
+    severity: info
+    status: reproduced
+    human_reviewed: true
+    scope_confirmed: true
+    evidence: "未认证 GET/POST 200（SPA JS 泄露端点，与 gcp C8 注册面同型）；sliding/code + captchaImage 验证码接口在位"
+    notes: 注册为写入型操作——利用需用户授权；注册后解锁登录态测试（IDOR/越权）
+  - id: C19
+    title: yun admin OA 登录面接口（OALogin/safeLogin/dual/verification）
+    asset: yun.womanhospital.cn/api/admin/base/login/*
+    severity: info
+    status: reproduced
+    human_reviewed: true
+    scope_confirmed: true
+    evidence: "5 登录流程接口 200（OALogin/safeLogin/dual/verification/captchaImage）；数据面（profile/sysConfig/user/notice/messages）全 401 认证正常"
+    notes: 接口存在性（SPA JS 泄露）；无未授权数据——认证保护正常
+  - id: C9
+    title: swiper-bundle.min.js 旧版（7.2.0, 2021）
+    asset: www.womanhospital.cn/js/swiper/swiper-bundle.min.js
+    severity: low
+    status: reproduced
+    human_reviewed: true
+    scope_confirmed: true
+    evidence: "文件头 'Swiper 7.2.0'（135,550B）；zap Vulnerable JS Library High→实际低危（无重大已知 CVE）"
+  - id: C11
+    title: flexoffice 公开计数端点（updateHits 无需认证）
+    asset: www.womanhospital.cn/flexoffice/api/sys/htl/actions/{content,channel}/updateHits
+    severity: low
+    status: reproduced
+    human_reviewed: true
+    scope_confirmed: true
+    evidence: "未认证 GET 200（nuclei 26 命中中 20+ 处）；写入型计数（点击数+1）无敏感数据"
+  - id: C12
+    title: /cms/ 与 /upload/ 目录 403（防盗链）
+    severity: info
+    status: closed
+    human_reviewed: true
+    scope_confirmed: true
+    notes: ffuf 403；katana 图片直链 200 但目录枚举禁止——防盗链配置正常
+  - id: C13
+    title: flexoffice search/ 端点方法限制
+    severity: info
+    status: closed
+    human_reviewed: true
+    scope_confirmed: true
+    notes: "GET → 500 'Request method not supported'；401 家族认证正常，非未授权"

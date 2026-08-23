@@ -1,0 +1,751 @@
+{
+ "results": [
+  {
+   "company_id": "65453",
+   "company_name": "杭州诗路云科技有限公司",
+   "core_words": [
+    "诗路云"
+   ],
+   "cores_pinyin": [
+    "shiluyun"
+   ],
+   "candidates": [
+    {
+     "domain": "finance.yahoo.com",
+     "score": 0
+    },
+    {
+     "domain": "investor.apple.com",
+     "score": 0
+    },
+    {
+     "domain": "www.investing.com",
+     "score": 0
+    },
+    {
+     "domain": "ca.finance.yahoo.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65452",
+   "company_name": "上海递煌智能科技有限公司",
+   "core_words": [
+    "递煌智能"
+   ],
+   "cores_pinyin": [
+    "dihuangzhineng"
+   ],
+   "candidates": [
+    {
+     "domain": "maps.apple.com",
+     "score": 0
+    },
+    {
+     "domain": "moovitapp.com",
+     "score": 0
+    },
+    {
+     "domain": "maps.google.be",
+     "score": 0
+    },
+    {
+     "domain": "fr.mappy.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65415",
+   "company_name": "江西师范大学",
+   "core_words": [
+    "师范"
+   ],
+   "cores_pinyin": [
+    "shifan"
+   ],
+   "candidates": [
+    {
+     "domain": "www.jxnu.edu.cn",
+     "score": 3
+    },
+    {
+     "domain": "jwc.jxnu.edu.cn",
+     "score": 3
+    },
+    {
+     "domain": "zsjy.jxnu.edu.cn",
+     "score": 3
+    },
+    {
+     "domain": "yz.jxnu.edu.cn",
+     "score": 3
+    }
+   ],
+   "verified": [
+    {
+     "domain": "jwc.jxnu.edu.cn",
+     "score": 3,
+     "title": "江西师范大学教务在线"
+    }
+   ],
+   "status": "confirmed"
+  },
+  {
+   "company_id": "65408",
+   "company_name": "北京忆恒创源科技股份有限公司",
+   "core_words": [
+    "忆恒创源"
+   ],
+   "cores_pinyin": [
+    "yihengchuangyuan"
+   ],
+   "candidates": [],
+   "verified": [],
+   "status": "not_found"
+  },
+  {
+   "company_id": "65405",
+   "company_name": "厦门美游无限科技有限公司",
+   "core_words": [
+    "美游无限"
+   ],
+   "cores_pinyin": [
+    "meiyouwuxian"
+   ],
+   "candidates": [
+    {
+     "domain": "www.midea.cn",
+     "score": 0
+    },
+    {
+     "domain": "dictionary.writtenchinese.com",
+     "score": 0
+    },
+    {
+     "domain": "namu.wiki",
+     "score": 0
+    },
+    {
+     "domain": "chinese.yabla.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65403",
+   "company_name": "中国司法大数据研究院有限公司",
+   "core_words": [
+    "司法大数据"
+   ],
+   "cores_pinyin": [
+    "sifadashuju"
+   ],
+   "candidates": [
+    {
+     "domain": "data.court.gov.cn",
+     "score": 3
+    },
+    {
+     "domain": "scc.pku.edu.cn",
+     "score": 3
+    },
+    {
+     "domain": "www.zhaopin.com",
+     "score": 0
+    },
+    {
+     "domain": "www.iguopin.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "candidate"
+  },
+  {
+   "company_id": "65393",
+   "company_name": "上海黑湖网络科技有限公司",
+   "core_words": [
+    "黑湖网络"
+   ],
+   "cores_pinyin": [
+    "heihuwangluo"
+   ],
+   "candidates": [],
+   "verified": [],
+   "status": "not_found"
+  },
+  {
+   "company_id": "65370",
+   "company_name": "浙江省医疗保障局",
+   "core_words": [
+    "医疗保障"
+   ],
+   "cores_pinyin": [
+    "yiliaobaozhang"
+   ],
+   "candidates": [],
+   "verified": [],
+   "status": "not_found"
+  },
+  {
+   "company_id": "65361",
+   "company_name": "杭州市人力资源和社会保障政务服务中心",
+   "core_words": [
+    "人力资源和社会保障政务"
+   ],
+   "cores_pinyin": [
+    "renliziyuanheshehuibaozhangzhengwu"
+   ],
+   "candidates": [
+    {
+     "domain": "50eyes.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65359",
+   "company_name": "厦门快快网络科技有限公司",
+   "core_words": [
+    "快快网络"
+   ],
+   "cores_pinyin": [
+    "kuaikuaiwangluo"
+   ],
+   "candidates": [
+    {
+     "domain": "ieeexplore.ieee.org",
+     "score": 0
+    },
+    {
+     "domain": "www.ieee-pels.org",
+     "score": 0
+    },
+    {
+     "domain": "www.chembk.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65358",
+   "company_name": "长沙市希尚网络科技有限公司",
+   "core_words": [
+    "希尚网络"
+   ],
+   "cores_pinyin": [
+    "xishangwangluo"
+   ],
+   "candidates": [
+    {
+     "domain": "www.nfl.com",
+     "score": 0
+    },
+    {
+     "domain": "www.cbssports.com",
+     "score": 0
+    },
+    {
+     "domain": "www.espn.com",
+     "score": 0
+    },
+    {
+     "domain": "bleacherreport.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65352",
+   "company_name": "深圳市优电智能科技发展有限公司",
+   "core_words": [
+    "优电智能发展"
+   ],
+   "cores_pinyin": [
+    "youdianzhinengfazhan"
+   ],
+   "candidates": [
+    {
+     "domain": "www.patelco.org",
+     "score": 0
+    },
+    {
+     "domain": "careers.patelco.org",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65346",
+   "company_name": "上海收钱吧互联网科技股份有限公司",
+   "core_words": [
+    "收钱吧互联网"
+   ],
+   "cores_pinyin": [
+    "shouqianbahulianwang"
+   ],
+   "candidates": [
+    {
+     "domain": "discordapp.com",
+     "score": 0
+    },
+    {
+     "domain": "status.discordapp.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65341",
+   "company_name": "厦门信达联科信息技术有限公司",
+   "core_words": [
+    "信达联科信息技术"
+   ],
+   "cores_pinyin": [
+    "xindaliankexinxijishu"
+   ],
+   "candidates": [],
+   "verified": [],
+   "status": "not_found"
+  },
+  {
+   "company_id": "65337",
+   "company_name": "黑龙江省征信有限责任公司",
+   "core_words": [
+    "征信"
+   ],
+   "cores_pinyin": [
+    "zhengxin"
+   ],
+   "candidates": [
+    {
+     "domain": "www.chip.de",
+     "score": 0
+    },
+    {
+     "domain": "www.videolyser.de",
+     "score": 0
+    },
+    {
+     "domain": "www.connect.de",
+     "score": 0
+    },
+    {
+     "domain": "www.computerbild.de",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65333",
+   "company_name": "南宁征途科技有限公司",
+   "core_words": [
+    "征途"
+   ],
+   "cores_pinyin": [
+    "zhengtu"
+   ],
+   "candidates": [
+    {
+     "domain": "zhengtushouyou.com.cn",
+     "score": 10
+    },
+    {
+     "domain": "zt.ztgame.com",
+     "score": 0
+    },
+    {
+     "domain": "ztmfht.ztgame.com.cn",
+     "score": 0
+    },
+    {
+     "domain": "zt.17173.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "candidate"
+  },
+  {
+   "company_id": "65330",
+   "company_name": "安徽基讯信息科技有限公司",
+   "core_words": [
+    "基讯信息"
+   ],
+   "cores_pinyin": [
+    "jixunxinxi"
+   ],
+   "candidates": [
+    {
+     "domain": "www.imdb.com",
+     "score": 0
+    },
+    {
+     "domain": "pro.imdb.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65326",
+   "company_name": "兰州大学第一医院",
+   "core_words": [
+    "第一"
+   ],
+   "cores_pinyin": [
+    "diyi"
+   ],
+   "candidates": [
+    {
+     "domain": "www.weather.com.cn",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65316",
+   "company_name": "国家图书馆出版社有限公司",
+   "core_words": [
+    "国家图书馆出版社"
+   ],
+   "cores_pinyin": [
+    "guojiatushuguanchubanshe"
+   ],
+   "candidates": [
+    {
+     "domain": "www.gov.cn",
+     "score": 3
+    },
+    {
+     "domain": "data.stats.gov.cn",
+     "score": 3
+    },
+    {
+     "domain": "www.stats.gov.cn",
+     "score": 3
+    }
+   ],
+   "verified": [],
+   "status": "candidate"
+  },
+  {
+   "company_id": "65308",
+   "company_name": "北京正准测检测技术服务有限公司",
+   "core_words": [
+    "正准测检测技术"
+   ],
+   "cores_pinyin": [
+    "zhengzhuncejiancejishu"
+   ],
+   "candidates": [],
+   "verified": [],
+   "status": "not_found"
+  },
+  {
+   "company_id": "65298",
+   "company_name": "上海禾赛科技有限公司",
+   "core_words": [
+    "禾赛"
+   ],
+   "cores_pinyin": [
+    "hesai"
+   ],
+   "candidates": [
+    {
+     "domain": "www.hesaitech.com",
+     "score": 10
+    },
+    {
+     "domain": "xueqiu.com",
+     "score": 0
+    },
+    {
+     "domain": "investor.hesaitech.com",
+     "score": 0
+    }
+   ],
+   "verified": [
+    {
+     "domain": "www.hesaitech.com",
+     "score": 10,
+     "title": "Global Leader in 3D Perception | Hesai Technology"
+    }
+   ],
+   "status": "confirmed"
+  },
+  {
+   "company_id": "65293",
+   "company_name": "南京尚网网络科技有限公司",
+   "core_words": [
+    "尚网网络"
+   ],
+   "cores_pinyin": [
+    "shangwangwangluo"
+   ],
+   "candidates": [
+    {
+     "domain": "www.brainyquote.com",
+     "score": 0
+    },
+    {
+     "domain": "dailycontributor.com",
+     "score": 0
+    },
+    {
+     "domain": "wisdomquotes.com",
+     "score": 0
+    },
+    {
+     "domain": "quotesoftheday.org",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65291",
+   "company_name": "宁夏码斯特信息科技有限公司",
+   "core_words": [
+    "码斯特信息"
+   ],
+   "cores_pinyin": [
+    "masitexinxi"
+   ],
+   "candidates": [
+    {
+     "domain": "web.whatsapp.com",
+     "score": 0
+    },
+    {
+     "domain": "www.whatsapp.com",
+     "score": 0
+    },
+    {
+     "domain": "wa.me",
+     "score": 0
+    },
+    {
+     "domain": "whatsapp.en.softonic.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65290",
+   "company_name": "石家庄鑫富达医药包装有限公司",
+   "core_words": [
+    "鑫富达医药包装"
+   ],
+   "cores_pinyin": [
+    "xinfudayiyaobaozhuang"
+   ],
+   "candidates": [
+    {
+     "domain": "based.com",
+     "score": 0
+    },
+    {
+     "domain": "medidime.com",
+     "score": 0
+    },
+    {
+     "domain": "www.amazon.com",
+     "score": 0
+    },
+    {
+     "domain": "choosebased.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65286",
+   "company_name": "济南欧莱博技术有限公司",
+   "core_words": [
+    "欧莱博技术"
+   ],
+   "cores_pinyin": [
+    "oulaibojishu"
+   ],
+   "candidates": [
+    {
+     "domain": "elephantguide.com",
+     "score": 0
+    },
+    {
+     "domain": "www.samuielephanthaven.org",
+     "score": 0
+    },
+    {
+     "domain": "biologyinsights.com",
+     "score": 0
+    },
+    {
+     "domain": "scienceinsights.org",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65285",
+   "company_name": "济南欧莱博科学仪器有限公司",
+   "core_words": [
+    "欧莱博科学仪器"
+   ],
+   "cores_pinyin": [
+    "oulaibokexueyiqi"
+   ],
+   "candidates": [
+    {
+     "domain": "www.henryford.com",
+     "score": 0
+    },
+    {
+     "domain": "www.history.com",
+     "score": 0
+    },
+    {
+     "domain": "corporate.ford.com",
+     "score": 0
+    },
+    {
+     "domain": "www.pbs.org",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65284",
+   "company_name": "山东康养医疗器械有限公司",
+   "core_words": [
+    "康养"
+   ],
+   "cores_pinyin": [
+    "kangyang"
+   ],
+   "candidates": [
+    {
+     "domain": "cwk.edu.hk",
+     "score": 0
+    },
+    {
+     "domain": "www.cwk.edu.hk",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65283",
+   "company_name": "济南欧莱宝生物技术有限公司",
+   "core_words": [
+    "欧莱宝"
+   ],
+   "cores_pinyin": [
+    "oulaibao"
+   ],
+   "candidates": [
+    {
+     "domain": "www.calculatrice.com",
+     "score": 0
+    },
+    {
+     "domain": "www.calculatorsoup.com",
+     "score": 0
+    },
+    {
+     "domain": "web2.0calc.com",
+     "score": 0
+    },
+    {
+     "domain": "www.symbolab.com",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65282",
+   "company_name": "山东盈贝康生物技术有限公司",
+   "core_words": [
+    "盈贝康"
+   ],
+   "cores_pinyin": [
+    "yingbeikang"
+   ],
+   "candidates": [
+    {
+     "domain": "www.loodgieters.nl",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  },
+  {
+   "company_id": "65281",
+   "company_name": "济南好来宝医疗器材有限公司",
+   "core_words": [
+    "好来宝医疗器材"
+   ],
+   "cores_pinyin": [
+    "haolaibaoyiliaoqicai"
+   ],
+   "candidates": [
+    {
+     "domain": "www.hanyuguoxue.com",
+     "score": 0
+    },
+    {
+     "domain": "www.hao123.com",
+     "score": 0
+    },
+    {
+     "domain": "www.hancibao.com",
+     "score": 0
+    },
+    {
+     "domain": "www.strokeorder.cc",
+     "score": 0
+    }
+   ],
+   "verified": [],
+   "status": "weak"
+  }
+ ]
+}

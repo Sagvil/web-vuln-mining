@@ -1,0 +1,4 @@
+# Dependencies for projects/butian-welfare-20260803/butian_src_pipeline.py.
+# Chromium is supplied by the Hermes host; Playwright uses it through --browser-path.
+requests==2.32.5
+playwright==1.54.0
