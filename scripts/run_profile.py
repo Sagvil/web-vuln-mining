@@ -498,13 +498,33 @@ def _active_dns_discovery(scope: dict[str, Any], run_dir: Path, statuses: list[d
     write_json(output, payload)
     return candidates
 
+def _load_template(profile_name: str, run_dir: Path) -> dict[str, Any] | None:
+    """Load the verification playbook referenced by a profile's `template` field.
+
+    Returns template metadata or None when the profile has no template.
+    The playbook is copied into the run directory as run_template.md so every
+    run records which playbook governed its verification steps.
+    """
+    tdir = WORKBENCH_ROOT / "templates"
+    prof = load_yaml(WORKBENCH_ROOT / "profiles" / f"{profile_name}.yaml")
+    name = prof.get("template")
+    if not name:
+        return None
+    src = tdir / f"{name}.md"
+    if not src.exists():
+        print(f"template {name!r} referenced by {profile_name} not found", file=sys.stderr)
+        return None
+    shutil.copy2(src, run_dir / "run_template.md")
+    return {"template": name, "path": str(src)}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("scope", type=Path)
-    parser.add_argument("--profile", choices=["source", "web-baseline", "api", "verify-xss", "verify-sqli", "content-discovery", "active-dns-discovery"], required=True)
+    parser.add_argument("--profile", choices=["source", "web-baseline", "api", "verify-xss", "verify-sqli", "verify-jwt", "verify-nosql", "verify-race", "verify-ssrf-ssti", "verify-llm-injection", "content-discovery", "active-dns-discovery"], required=True)
     parser.add_argument("--hexstrike-status", default="optional-not-requested")
     parser.add_argument("--validate-only", action="store_true", help="validate TARGET.yaml without starting a profile")
-    parser.add_argument("--input", type=Path, help="explicit in-scope candidate URL file for verify-xss or verify-sqli")
+    parser.add_argument("--input", type=Path, help="explicit in-scope candidate URL file for verify-* profiles")
     parser.add_argument("--wordlist", type=Path, help="wordlist used only by content-discovery; DNS uses active_dns_discovery.wordlist")
     parser.add_argument("--max-requests", type=int, default=None, help="maximum wordlist entries consumed by content-discovery; overrides TARGET.yaml")
     args = parser.parse_args()
@@ -544,6 +564,7 @@ def main() -> int:
     for directory in (run_dir / "raw", run_dir / "sarif", run_dir / "logs", run_dir / "evidence"):
         directory.mkdir(parents=True, exist_ok=True)
     shutil.copy2(args.scope, run_dir / "scope.yaml")
+    template_meta = _load_template(args.profile, run_dir)
     statuses: list[dict[str, Any]] = []
     asset_candidates: list[dict[str, Any]] = []
     if args.profile == "source":
@@ -565,10 +586,22 @@ def main() -> int:
             _verify_xss(scope, run_dir, statuses, candidate_file)
         elif args.profile == "verify-sqli":
             _verify_sqli(scope, run_dir, statuses, candidate_file)
+        elif args.profile in {"verify-jwt", "verify-nosql", "verify-race", "verify-ssrf-ssti", "verify-llm-injection"}:
+            # Playbook-driven verification: the agent executes the steps in
+            # run_template.md against in-scope candidates; evidence lands in
+            # run_dir/evidence per templates/evidence-record.md.
+            statuses.append({
+                "tool": args.profile,
+                "status": "playbook-ready",
+                "reason": "template-based verification; steps in run_template.md",
+                "requires_input": bool(candidate_file),
+            })
         else:
             configured_limit = int(((scope.get("content_discovery") or {}).get("max_requests", 300)))
             _content_discovery(scope, run_dir, statuses, wordlist, max(1, min(args.max_requests if args.max_requests is not None else configured_limit, 10_000)))
     manifest = {"schema_version": 1, "run_id": run_dir.name, "profile": args.profile, "scope": str(args.scope), "local_tool_status": statuses, "hexstrike_status": args.hexstrike_status, "asset_candidates": {"count": len(asset_candidates), "path": str(run_dir / "raw" / "asset-candidates.json") if args.profile == "active-dns-discovery" else None}}
+    if template_meta:
+        manifest["template_applied"] = template_meta["template"]
     write_json(run_dir / "run-manifest.json", manifest)
     print(json.dumps(manifest, ensure_ascii=False, indent=2))
     return 0 if not any(item.get("status") == "failed" for item in statuses) else 1
