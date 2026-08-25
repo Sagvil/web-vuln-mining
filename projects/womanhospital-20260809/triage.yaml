@@ -121,3 +121,36 @@ findings:
     human_reviewed: true
     scope_confirmed: true
     notes: "GET → 500 'Request method not supported'；401 家族认证正常，非未授权"
+
+
+# ── Round 3 (2026-08-25) — R3 从头重挖收官 ──
+round: 3
+round3_runs:
+  - runs/20260825T065315Z-womanhospital-20260809-web-baseline
+  - runs/20260825T070400Z-womanhospital-20260809-content-discovery
+round3_summary:
+  reverification: C1~C19 全部维持原判（无一推翻）；C16 数据面重验仍全 404 维持 medium；C18 按用户裁决 hold
+  new_findings:
+    - id: R3-N1
+      title: ir/lac 知识库 /api/help 公开暴露 AutoLogin SSO 接口规范（DES+PassKey+自动建号逻辑）
+      asset: "{ir,lac}.womanhospital.cn/api/help + /API/AutoLogin/Index"
+      severity: low
+      status: reproduced
+      human_reviewed: true
+      scope_confirmed: true
+    - id: R3-N2
+      title: wxglht jQuery 1.8.3 旧版（CVE-2012-6708/CVE-2015-9251）
+      severity: low
+      status: reproduced
+      human_reviewed: true
+      scope_confirmed: true
+    - id: R3-N3
+      title: flexoffice SPA 壳未授权可达但 API 全 401（10 端点验证）
+      severity: info
+      status: reproduced
+      human_reviewed: true
+      scope_confirmed: true
+    - id: R3-N4
+      title: edc 主机全路径 500（应用故障状态记录）
+      status: environment-limited
+  full_report: runs/r3-womanhospital-stage1/REPORT-R3.md
