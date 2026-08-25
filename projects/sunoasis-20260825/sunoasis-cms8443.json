@@ -1,0 +1,11 @@
+{
+ "host": "cms.sunoasis.com.cn:8443",
+ "status": "200 仅根路径",
+ "fingerprint": {
+  "login_frame": "sweb-lib/UI_component 框架（jQuery 3.5.0 + 自定义组件）",
+  "login_form": "loginForm + username/password 字段（页面内联逻辑）",
+  "server": "HTTP Server 1.0",
+  "state": "静态资源全部 404——只部署了登录壳，后端未完整暴露"
+ },
+ "verdict": "登录入口壳（中间态部署）；无可用资源面；登录接口未知（Login.js 404）"
+}

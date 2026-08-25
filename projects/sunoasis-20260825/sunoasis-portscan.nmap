@@ -1,0 +1,212 @@
+# Nmap 7.94SVN scan initiated Tue Aug 25 14:41:41 2026 as: nmap -Pn -T3 --top-ports 300 -sV --version-light -oA runs/sunoasis-portscan -iL /dev/fd/63
+Nmap scan report for agent.sunoasis.com.cn (124.89.116.244)
+Host is up (0.19s latency).
+Not shown: 284 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE        VERSION
+22/tcp   open     ssh            HP Comware switch sshd 7.1.064 (protocol 2.0)
+25/tcp   filtered smtp
+80/tcp   filtered http
+135/tcp  filtered msrpc
+139/tcp  filtered netbios-ssn
+443/tcp  filtered https
+445/tcp  filtered microsoft-ds
+593/tcp  filtered http-rpc-epmap
+1068/tcp filtered instl_bootc
+3128/tcp filtered squid-http
+3333/tcp filtered dec-notes
+4444/tcp filtered krb524
+5800/tcp filtered vnc-http
+5900/tcp filtered vnc
+7070/tcp filtered realserver
+9001/tcp filtered tor-orport
+Service Info: OS: Comware; CPE: cpe:/o:hp:comware:7.1.064
+
+Nmap scan report for cms.sunoasis.com.cn (60.13.146.4)
+Host is up (0.23s latency).
+Not shown: 299 filtered tcp ports (no-response)
+PORT     STATE SERVICE        VERSION
+8443/tcp open  ssl/https-alt?
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+SF-Port8443-TCP:V=7.94SVN%T=SSL%I=2%D=8/25%Time=6A8DAA59%P=aarch64-unknown
+SF:-linux-gnu%r(GetRequest,202E,"HTTP/1\.1\x20200\x20OK\r\nDate:\x20SUN,\x
+SF:2025\x20Aug\x202026\x2022:44:29\r\nConnection:\x20\r\nServer:\x20HTTP\x
+SF:20Server\x201\.0\r\nContent-Length:\x207594\r\nX-Frame-Options:\x20SAME
+SF:ORIGIN\r\nX-Content-Type-Options:\x20nosniff\r\nX-XSS-Protection:\x201;
+SF:mode=block\r\nStrict-Transport-Security:\x20max-age=31536000\r\nContent
+SF:-Security-Policy:\x20default-src\x20'self';script-src\x20'self'\x20'uns
+SF:afe-inline'\x20'unsafe-eval';style-src\x20'self'\x20'unsafe-inline';img
+SF:-src\x20'self'\x20data:;frame-ancestors\x20'self';\r\nX-Download-Option
+SF:s:\x20noopen\r\nContent-Type:\x20text/html;\x20charset=utf-8\r\nSet-Coo
+SF:kie:\x20SESSIONID=jQEAAIf1AmmAO/Kl0OJaFGCR8Fvc4j6strcGFKFo\+mM=&jQEAAJN
+SF:4aX3Ky6r9RdJV5w==&HUAWEI\x20&langfrombrows=&copyright=2014-2022;httponl
+SF:y;\x20secure\r\n\r\n<!Doctype\x20html>\r\n<html>\r\n\t<head>\r\n\t\t<ti
+SF:tle></title>\r\n\t\t<meta\x20http-equiv=\"Content-Type\"\x20content=\"t
+SF:ext/html;\x20charset=UTF-8\"\x20/>\r\n\t\t<meta\x20http-equiv=\"Expires
+SF:\"\x20content=\"0\"></meta>\r\n\t\t<meta\x20http-equiv=\"Pragma\"\x20co
+SF:ntent=\"no-cache\"></meta>\x20\r\n\t\t<meta\x20http-equiv=\"Cac")%r(HTT
+SF:POptions,224,"HTTP/1\.1\x20404\x20Not\x20Found\r\nDate:\x20SUN,\x2025\x
+SF:20Aug\x202026\x2022:44:32\r\nConnection:\x20\r\nServer:\x20HTTP\x20Serv
+SF:er\x201\.0\r\nContent-Length:\x2052\r\nX-Frame-Options:\x20SAMEORIGIN\r
+SF:\nX-Content-Type-Options:\x20nosniff\r\nX-XSS-Protection:\x201;mode=blo
+SF:ck\r\nStrict-Transport-Security:\x20max-age=31536000\r\nContent-Securit
+SF:y-Policy:\x20default-src\x20'self';script-src\x20'self'\x20'unsafe-inli
+SF:ne'\x20'unsafe-eval';style-src\x20'self'\x20'unsafe-inline';img-src\x20
+SF:'self'\x20data:;frame-ancestors\x20'self';\r\nX-Download-Options:\x20no
+SF:open\r\nContent-Type:\x20text/html;\x20charset=utf-8\r\n\r\n<body><h1>H
+SF:TTP/1\.1\x20404\x20Object\x20Not\x20Found\n</h1></body>");
+
+Nmap scan report for crm.sunoasis.com.cn (124.117.209.199)
+Host is up.
+All 300 scanned ports on crm.sunoasis.com.cn (124.117.209.199) are in ignored states.
+Not shown: 300 filtered tcp ports (no-response)
+
+Nmap scan report for dlp.sunoasis.com.cn (124.117.209.195)
+Host is up.
+All 300 scanned ports on dlp.sunoasis.com.cn (124.117.209.195) are in ignored states.
+Not shown: 300 filtered tcp ports (no-response)
+
+Nmap scan report for eportal.sunoasis.com.cn (124.89.116.244)
+Host is up (0.19s latency).
+Not shown: 284 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE        VERSION
+22/tcp   open     ssh            HP Comware switch sshd 7.1.064 (protocol 2.0)
+25/tcp   filtered smtp
+80/tcp   filtered http
+135/tcp  filtered msrpc
+139/tcp  filtered netbios-ssn
+443/tcp  filtered https
+445/tcp  filtered microsoft-ds
+593/tcp  filtered http-rpc-epmap
+1068/tcp filtered instl_bootc
+3128/tcp filtered squid-http
+3333/tcp filtered dec-notes
+4444/tcp filtered krb524
+5800/tcp filtered vnc-http
+5900/tcp filtered vnc
+7070/tcp filtered realserver
+9001/tcp filtered tor-orport
+Service Info: OS: Comware; CPE: cpe:/o:hp:comware:7.1.064
+
+Nmap scan report for mail.sunoasis.com.cn (124.117.209.194)
+Host is up (0.21s latency).
+Other addresses for mail.sunoasis.com.cn (not scanned): 60.13.132.67
+Not shown: 283 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE      VERSION
+25/tcp   filtered smtp
+53/tcp   filtered domain
+80/tcp   filtered http
+82/tcp   filtered xfer
+88/tcp   filtered kerberos-sec
+100/tcp  filtered newacct
+135/tcp  filtered msrpc
+139/tcp  filtered netbios-ssn
+443/tcp  filtered https
+444/tcp  filtered snpp
+445/tcp  filtered microsoft-ds
+2601/tcp filtered zebra
+2602/tcp filtered ripd
+3306/tcp filtered mysql
+4444/tcp filtered krb524
+8080/tcp filtered http-proxy
+9999/tcp filtered abyss
+
+Nmap scan report for oa.sunoasis.com.cn (124.117.209.199)
+Host is up.
+All 300 scanned ports on oa.sunoasis.com.cn (124.117.209.199) are in ignored states.
+Not shown: 300 filtered tcp ports (no-response)
+
+Nmap scan report for pm.sunoasis.com.cn (124.89.116.242)
+Host is up (0.21s latency).
+Not shown: 287 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE        VERSION
+22/tcp   open     ssh            HP Comware switch sshd 7.1.064 (protocol 2.0)
+25/tcp   filtered smtp
+135/tcp  filtered msrpc
+139/tcp  filtered netbios-ssn
+443/tcp  filtered https
+445/tcp  filtered microsoft-ds
+593/tcp  filtered http-rpc-epmap
+1068/tcp filtered instl_bootc
+3128/tcp filtered squid-http
+3333/tcp filtered dec-notes
+4444/tcp filtered krb524
+5800/tcp filtered vnc-http
+5900/tcp filtered vnc
+Service Info: OS: Comware; CPE: cpe:/o:hp:comware:7.1.064
+
+Nmap scan report for rpa.sunoasis.com.cn (222.90.211.5)
+Host is up (0.17s latency).
+Not shown: 294 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE      VERSION
+22/tcp   open     ssh          HP Comware switch sshd 7.1.064 (protocol 2.0)
+25/tcp   filtered smtp
+80/tcp   filtered http
+443/tcp  filtered https
+445/tcp  filtered microsoft-ds
+8080/tcp filtered http-proxy
+Service Info: OS: Comware; CPE: cpe:/o:hp:comware:7.1.064
+
+Nmap scan report for ru.sunoasis.com.cn (124.117.209.194)
+Host is up (0.21s latency).
+Not shown: 283 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE      VERSION
+25/tcp   filtered smtp
+53/tcp   filtered domain
+80/tcp   filtered http
+82/tcp   filtered xfer
+88/tcp   filtered kerberos-sec
+100/tcp  filtered newacct
+135/tcp  filtered msrpc
+139/tcp  filtered netbios-ssn
+443/tcp  filtered https
+444/tcp  filtered snpp
+445/tcp  filtered microsoft-ds
+2601/tcp filtered zebra
+2602/tcp filtered ripd
+3306/tcp filtered mysql
+4444/tcp filtered krb524
+8080/tcp filtered http-proxy
+9999/tcp filtered abyss
+
+Nmap scan report for tnt.sunoasis.com.cn (124.117.209.197)
+Host is up.
+All 300 scanned ports on tnt.sunoasis.com.cn (124.117.209.197) are in ignored states.
+Not shown: 300 filtered tcp ports (no-response)
+
+Nmap scan report for vault.sunoasis.com.cn (124.89.116.244)
+Host is up (0.20s latency).
+Not shown: 284 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE        VERSION
+22/tcp   open     ssh            HP Comware switch sshd 7.1.064 (protocol 2.0)
+25/tcp   filtered smtp
+80/tcp   filtered http
+135/tcp  filtered msrpc
+139/tcp  filtered netbios-ssn
+443/tcp  filtered https
+445/tcp  filtered microsoft-ds
+593/tcp  filtered http-rpc-epmap
+1068/tcp filtered instl_bootc
+3128/tcp filtered squid-http
+3333/tcp filtered dec-notes
+4444/tcp filtered krb524
+5800/tcp filtered vnc-http
+5900/tcp filtered vnc
+7070/tcp filtered realserver
+9001/tcp filtered tor-orport
+Service Info: OS: Comware; CPE: cpe:/o:hp:comware:7.1.064
+
+Nmap scan report for vpn.sunoasis.com.cn (113.140.21.154)
+Host is up (0.17s latency).
+Not shown: 293 closed tcp ports (conn-refused)
+PORT     STATE    SERVICE        VERSION
+22/tcp   open     ssh            HP Comware switch sshd 7.1.064 (protocol 2.0)
+25/tcp   filtered smtp
+80/tcp   filtered http
+443/tcp  filtered https
+445/tcp  filtered microsoft-ds
+1111/tcp filtered lmsocialserver
+8080/tcp filtered http-proxy
+Service Info: OS: Comware; CPE: cpe:/o:hp:comware:7.1.064
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Tue Aug 25 14:45:01 2026 -- 13 IP addresses (13 hosts up) scanned in 199.99 seconds

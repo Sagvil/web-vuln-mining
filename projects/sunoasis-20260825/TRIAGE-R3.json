@@ -1,0 +1,52 @@
+{
+ "campaign": "sunoasis-20260825 R3: 端口扫描 + CVE 比对",
+ "date": "2026-08-25",
+ "portscan": {
+  "method": "nmap -Pn -T3 --top-ports 300 -sV --version-light, 13 hosts",
+  "results": {
+   "ssh_comware_switches": [
+    "agent",
+    "eportal",
+    "pm",
+    "rpa",
+    "vault",
+    "vpn"
+   ],
+   "cms_8443": "登录壳（sweb-lib/UI_component 框架，静态资源全 404，中间态部署）",
+   "closed": [
+    "crm",
+    "dlp",
+    "mail",
+    "oa",
+    "ru",
+    "tnt"
+   ],
+   "filtered": "vpn 25/80/443/445/8080 等被 ACL 过滤"
+  },
+  "finding": {
+   "S3-1": {
+    "type": "网络设备管理面公网暴露",
+    "severity": "medium-candidate",
+    "detail": "6 台 HP/H3C Comware 7.1.064 交换机 SSH(22) 直接暴露公网（agent/eportal/pm/rpa/vault/vpn）——非服务器，是网络设备；管理面暴露=弱口令/漏洞利用入口",
+    "evidence": "nmap service fingerprint: 'HP Comware switch sshd 7.1.064'"
+   },
+   "S3-2": {
+    "type": "中间态部署登录壳",
+    "severity": "info",
+    "detail": "cms.sunoasis.com.cn:8443 仅根路径 200（登录壳），静态资源全 404——疑似部署中断",
+    "evidence": "根页引用 sweb-lib/UI_component 但子资源全 404"
+   }
+  }
+ },
+ "cve_comparison": {
+  "inbiz_ecm_8.2.0.0": "私有定制 ECM（非公开产品）——公开 CVE 库无对应条目（检索 0 命中）",
+  "wnm_vpn": "特征混合（Metronic 公开模板），产品无法归因——无 CVE 可比对",
+  "comware_7.1.064": "SSH 服务无公开高危 RCE（公开 CVE 集中在设备 Web 管理面/CLI）；管理面暴露本身为风险面",
+  "verdict": "三个目标均无公开 CVE 可直接套用；风险=管理面暴露与中间态部署，非已知漏洞"
+ },
+ "next_steps": [
+  "Comware 交换机管理面=网络边界设备，若补天接受可报'管理面公网暴露'（需确认资产归属）",
+  "cms:8443 登录壳持续监控（部署完成后即为完整攻击面）",
+  "VPN 网管 4 实例与交换机同属网络设备面——可合并一轮网络设备专项"
+ ]
+}
