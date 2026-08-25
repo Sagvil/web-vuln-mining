@@ -77,9 +77,10 @@ reproduce_steps:                            # 3-5 步复现
 | 头/ Cookie 注入无页面回显 | **DB 直查实锤**：注入落库后 `mysql CLI SELECT` 验证行数据 | SQLi-Labs Less-18~22 |
 | 前端 DOM 判定挑战 | **socket.io 事件直发**：`socket.emit('verifyXxxChallenge', payload)` 无需浏览器即解锁 | Juice Shop localXss/xssBonus |
 | 挑战类关卡（随机表 + 尝试次数限制） | **日志侧提取流水线**：php -S 日志落盘 → 注入 → grep 提取表名/列名/secret → 提交 | SQLi-Labs Less-54~65 |
+| SSRF 无响应回显（curl 扩展缺失/目标无输出） | **监听器旁证**：本地起 TCP 监听，注入指向 `http://127.0.0.1:PORT/marker`——**服务端实收出网请求（连接+请求行日志）强于页面回显**；`file_get_contents` 路径与 curl 路径分开验证（扩展缺失只影响其一） | Pikachu ssrf_fgc（2026-08-25 实收 GET /ssrf-proof-fgc） |
 
 **通用原则**：
-- 服务端判定信号（挑战 solved、状态码+响应差异、DB 行变化）强于自我观察；判定信号必须有**可复现输入 + 对照差异**双要素
+- 服务端判定信号（挑战 solved、状态码+响应差异、DB 行变化、**监听器实收请求**）强于自我观察；判定信号必须有**可复现输入 + 对照差异**双要素
 - 每条证据链保留：payload 原文 + 请求（含编码方式，标注 requests/curl 差异）+ 响应摘录/日志摘录 + DB 或文件落库验证
 - 编码坑要记录在证据里：`requests` 会二次编码 `%09`、base64 cookie 的 `=` 会被编码（改用 curl 原样发送）、URL fragment 的 `#` 需 `%23`
 - 尝试次数限制类挑战（如 5~14 次）：把提取次数压缩到最少（GROUP_CONCAT 合并列名），超限就 reset 重来，不浪费次数

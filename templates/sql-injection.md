@@ -19,7 +19,7 @@ payload_count: 4
 
 - **SQLi-Labs 65 关全验证（2026-08-23）**：Less-1~22 基础注入（回显/报错/盲注/头注入/cookie/base64 cookie）、Less-23~31 过滤绕过（注释符/`or`/空格/select/union 过滤）、Less-32~37 宽字节+转义、Less-38~45 堆叠、Less-46~53 ORDER BY、Less-54~65 随机表挑战
 - **宽字节注入三要素（Less-32/33/34 实测）**：① 连接字符集 GBK（`mysqli_set_charset($con,'gbk')` 或老环境默认）；② `%df%27` 原始字节（requests 会把 `%xx` 二次编码成 `%25xx`，用 Python 真 `\xdf` 或 curl）；③ **id 用 `0` 开头**（id=0 无结果才触发 UNION 回显；`1%df%27` 会命中 id=1 显示 Dumb 造成假象）
-- **PHP 8.3 mysqlnd 加固（Less-36/37 环境限制）**：`mysqli_real_escape_string` 会转义 GBK 首字节（`\xdf` → `\x5c\xdf`），经典宽字节 payload 失效——addslashes 版（32/33/34）不受影响
+- ~~**PHP 8.3 mysqlnd 加固（Less-36/37 环境限制）**~~ **【2026-08-25 反转：此判定是误判】**：real_escape_string 确实插入 0x5C，但"转义在前、`SET NAMES gbk` 在后"的时序下 MySQL 将 `0xDF+0x5C` 吞成一个 GBK 双字节字符——引号照样逃逸。Hex 回显 `df 5c 27` + UNION 提取成功实锤。**Less-36/37 完全可利用**；当时失败的根因是测试工具把 `%df` 二次编码成 `%25df`（见下方二次编码坑）。**通用教训：判定 environment-limited 前，先用 Hex 回显/日志验证 payload 是否以原始字节到达服务器**
 - **堆叠注入（Less-38~45）**：`1';INSERT INTO users(id,username,password) VALUES(999,'x','y')-- ` 验证 DB 落库（mysqli_multi_query）；POST 场景注意 username 可能被转义但 **password 裸拼**（注入点在 passwd）
 - **二次注入（Less-24）**：注册 `admin'#`（INSERT 双引号包裹下单引号无害）→ 改密码时 username 单引号拼接 `#` 注释掉密码校验 → 任意改 admin 密码
 - **ORDER BY 注入语义（Less-46~53）**：裸数字=列号（`ORDER BY 0` 报错 1054）；表达式=排序值（`ORDER BY 2 AND 1=1` → 键 1 按 id 排序 vs `ORDER BY 2` 按 username 排序——排序差异证明注入）；堆叠可用
