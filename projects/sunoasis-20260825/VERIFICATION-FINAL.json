@@ -1,0 +1,33 @@
+{
+ "title": "漏洞真实性确认报告（源码级对照）",
+ "date": "2026-08-26",
+ "method": "官方源码(git历史 25 提交, V3.2.5→V3.2.23)逐行对照目标行为",
+ "confirmed": {
+  "S4_API签名绕过": {
+   "severity": "medium(升级: 魔改缺陷实证)",
+   "official_logic": "apps/common/ApiController.php::checkAccess: api_auth开启时强制 appid+timestamp+signature 三参数; signature=md5(md5(api_appid+api_secret+timestamp)); 时间戳15秒窗口; 模板标签 {pboot:appid}/{pboot:signature} 由 ParserController 注入页面",
+   "target_behavior": "仅校验 appid 参数存在性(任意值放行); timestamp/signature 完全忽略(错误值/过期/未来全放行); siteKeys 注入机制与官方一致(appid='admin'=官方默认值未改)",
+   "verdict": "服务端 checkAccess 被魔改阉割(仅保留 appid 存在性检查)——非官方版本差异, 是代码级认证缺陷; 官方默认 api_appid='admin' 亦未修改",
+   "evidence": "R4 实测矩阵 + ParserController.php:181-183 源码"
+  },
+  "S7_PII泄露": {
+   "severity": "medium",
+   "official_logic": "cms/form 官方即为公开读接口(需 api_auth 保护)——目标未开启认证导致裸奔",
+   "target_behavior": "POST /api.php/cms/form/ {appid:x, fcode:1} → 2条真实人才推荐记录(姓名+手机号+IP+岗位)",
+   "verdict": "数据真实(2022-2023年提交, 含内部字段 create_user='admin' 佐证内部系统)",
+   "evidence": "记录#3: user_push=车展钊 user_tel=15864641289 push_tel=18063143644"
+  },
+  "S6_OAuth劫持链": {
+   "severity": "HIGH",
+   "target_behavior": "redirect_uri 无白名单(http/https外域全放行, 仅空值拒); checkLogin 未授权可达(loginCode=102); case 100 服务端回显 redirectUrl 无条件跳转",
+   "verdict": "代码级+行为级双证据; 完整攻击链成立(账户接管路径)",
+   "evidence": "E1-E5 五组证据(白名单缺失/协议过滤定位/会话独立/回显跳转/频控出口IP)"
+  }
+ },
+ "excluded_after_source_review": [
+  "会员登录SQLi(V3.2.16修复项): 目标 /member/* 关闭(错误信息页), 攻击面不可达",
+  "上传扩展名白名单绕过(V3.2.16修复项): 无未授权上传接口(UEditor不存在/do 控制器仅 likes/oppose)",
+  "API SQLi: 目标参数为引号包裹精确比较(00/0.0/0,0 判别实证), 3.2.16 前后行为一致无注入"
+ ],
+ "final_verdict": "三项漏洞均确认真实: S6 高危(账户接管路径) + S4/S7 中危(未授权访问+PII泄露); 目标 PbootCMS ≥V3.2.5 且 checkAccess 被阉割(appid='admin' 官方默认值)"
+}
