@@ -1,0 +1,15 @@
+{
+ "finding": "S6: 特变开放平台 ejia.tbea.com OAuth 授权码劫持（redirect_uri 无白名单校验）",
+ "severity": "high-candidate（需真实扫码完成闭环验证）",
+ "chain": {
+  "1_qrconnet": "GET /opencloud/openthird/qrconnet?appid=500000345&redirect_uri=<任意值> → 进入 TBe+ 授权登录页；redirect_uri 无白名单（外域 http/https 均放行，errorCode=110 仅要求非空）",
+  "2_token": "登录页隐藏字段 token=32位hex（服务端会话令牌，每次请求新生成）",
+  "3_checkLogin": "POST /opencloud/openthird/checkLogin {appid, token} → {loginCode:102=等待扫码, 100=扫码成功}（轮询端点未授权可调，仅凭 token）",
+  "4_redirect": "扫码成功(100)时服务端回显 data.redirectUrl=用户传入的 redirect_uri，前端 window.top.location=redirectUrl（login.html 内联 JS 代码实证）",
+  "5_impact": "攻击者构造恶意二维码(redirect_uri=evil.com)诱骗员工扫码 → TBe+ 确认后授权码/回跳被送往攻击者域 → 授权码换取登录态 → 账户接管"
+ },
+ "evidence_files": [],
+ "new_asset": "ejia.tbea.com（特变开放平台, openresty, opencloud/openthird 第三方接入体系）",
+ "verification_gap": "未做真实扫码闭环（需 TBe+ 真实账号+扫码动作，超出只读边界）；redirect_uri 无校验+回显跳转为已证实事实",
+ "scope_note": "ejia.tbea.com 为 tbea.com 集团域（非 sunoasis.com.cn）——补天 64777 批次 scope 需确认是否覆盖集团域；若不覆盖，此发现归属集团批次"
+}
