@@ -1,0 +1,28 @@
+{
+ "campaign": "sunoasis-20260825 R2 深挖",
+ "date": "2026-08-25",
+ "chain_A": {
+  "register": {
+   "flow": "sendCode(完整t对象) → verifyEmail(同t) → token → register(全字段+token)",
+   "blocker": "verify/email 服务端返回 20008 必填参数为空——浏览器真实流程同样失败（接口级异常）",
+   "verdict": "注册通道不可用（对所有人）→ 存储 XSS 写入链路被上游阻断",
+   "note": "该接口缺陷本身可报低危（功能失效）但需先人工确认正常用户也无法注册"
+  },
+  "login_jwt": {
+   "error_handling": "统一错误码 20001（不泄露用户存在性）✓",
+   "token_type": "加密 token（LaravelCrypt 风格，'解密失败'报错）——非 JWT，无 alg:none/弱密钥伪造面",
+   "verdict": "认证实现规范"
+  }
+ },
+ "chain_B": {
+  "sso_backend": "/api/sso/* (login/signin + captcha)",
+  "protections": [
+   "state = HS512 JWT 会话绑定（无效即拒绝）",
+   "captcha 图片型前置校验（ddddocr 可识别 qNYm，但爆破被授权边界禁止）",
+   "密码 RSA 前端加密传输",
+   "统一错误信息不泄露用户存在性"
+  ],
+  "oauth": "/authorize 为 SPA 路由，redirect_uri 校验在 JS/API 层（需登录态才能测到真实校验逻辑）",
+  "verdict": "SSO 防护链完整；高危突破口未发现"
+ }
+}

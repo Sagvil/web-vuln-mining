@@ -1,0 +1,10 @@
+{
+ "sso_backend": "/api/sso/*",
+ "endpoints": [
+  "login/signin",
+  "captcha"
+ ],
+ "password_transport": "RSA 前端加密",
+ "state": "HS512 JWT {exp, jti} 会话状态",
+ "captcha": "支持 text 类型（?captcha=text）"
+}
