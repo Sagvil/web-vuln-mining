@@ -1,0 +1,67 @@
+{
+ "domain": "sunoasis.com.cn",
+ "date": "2026-08-25",
+ "method": "历史快照复验(21) + 万级词表 DNS brute(10000) + HTTP 探活(21)",
+ "layer1_hist_alive": 21,
+ "layer2_brute": {
+  "wordlist": "subdomains-10000.txt",
+  "new_found_vs_hist": 0
+ },
+ "layer3_web_alive": 8,
+ "web_hosts": {
+  "www": {
+   "status": 200,
+   "title": "特变电工新能源",
+   "note": "官网主站 52KB, jquery-3.4.1, /search/ 表单, 无登录面"
+  },
+  "access/bigdata/em/portal": {
+   "status": 301,
+   "note": "同构国产 SSL VPN 网管 wnm, 登录页 /web/frame/login.html (Metronic 模板, AES 密码加密, Server: HTTPD), 4 实例"
+  },
+  "english": {
+   "status": 200,
+   "title": "抱歉，网站正在升级中！",
+   "note": "英文站维护页 2.7KB"
+  },
+  "spanish": {
+   "status": 200,
+   "title": "抱歉，网站正在升级中！",
+   "note": "西语站维护页 2.7KB"
+  },
+  "info": {
+   "status": 200,
+   "title": "特变新能源资料信息中心",
+   "note": "Nuxt SSR 前端 (_nuxt/*.js)"
+  }
+ },
+ "non_web": [
+  "agent",
+  "cms",
+  "crm",
+  "dlp",
+  "eportal",
+  "mail",
+  "oa",
+  "pm",
+  "rpa",
+  "ru",
+  "tnt",
+  "vault",
+  "vpn"
+ ],
+ "high_value_targets": [
+  "info.sunoasis.com.cn (Nuxt 资料中心)",
+  "www.sunoasis.com.cn /search/ 搜索面",
+  "SSL VPN 网管 4 实例 (access/bigdata/em/portal) — 登录面可探测但需谨慎"
+ ],
+ "candidates_for_scope": [
+  "www",
+  "info",
+  "access",
+  "bigdata",
+  "em",
+  "portal",
+  "english",
+  "spanish"
+ ]
+}

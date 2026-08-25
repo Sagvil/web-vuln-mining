@@ -1,0 +1,16 @@
+{
+ "product": "国产 SSL VPN 网管（wnm 路径 + Metronic 模板 + AES 前端加密 + Server: HTTPD）",
+ "evidence": {
+  "login_url": "https://access.sunoasis.com.cn/web/frame/login.html (200, 8311B)",
+  "redirect_chain": "/web/index.html → frame/login.html",
+  "form": "POST frame/index.php, AES 加密密码 (aes.js)",
+  "vcode": "/wnm/vcode.bmp (验证码)",
+  "server_header": "HTTPD, X-Frame-Options SAMEORIGIN, X-XSS-Protection 1;mode-block"
+ },
+ "affected_hosts": [
+  "access",
+  "bigdata",
+  "em",
+  "portal"
+ ]
+}
