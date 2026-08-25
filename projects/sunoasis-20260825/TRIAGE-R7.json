@@ -1,0 +1,48 @@
+{
+ "campaign": "sunoasis-20260826 R7: PbootCMS 全 API 面穷尽+OAuth 高危确认",
+ "date": "2026-08-26",
+ "methodology": "官方源码本地审计(pbootcmspro/PbootCMS 3.2.23)+对照目标行为",
+ "findings": {
+  "S7-1": {
+   "severity": "medium",
+   "title": "PbootCMS API 未授权读取表单 PII（cms/form fcode=1）",
+   "detail": "POST /api.php/cms/form/ {appid:任意值, fcode:1} 未授权返回 2 条真实人才推荐记录：真实姓名+手机号+IP+岗位信息（2022-2023 遗留数据）",
+   "evidence": "user_push/push_name/push_tel/user_tel 字段；记录#3 含真实手机号",
+   "pii": true
+  },
+  "S7-2": {
+   "severity": "low-medium",
+   "title": "PbootCMS addmsg 未授权写入",
+   "detail": "POST /api.php/cms/addmsg/ 参数链验证：user_push→push_name→push_position 逐级必填校验；可伪造人才推荐数据（未实际提交，仅验证到最后一环前）",
+   "evidence": "错误提示链：推荐人姓名→被推荐人姓名→推荐岗位"
+  },
+  "S7-3": {
+   "severity": "info",
+   "title": "PbootCMS API 面全量枚举（19 有效路由）",
+   "detail": "cms/{site,company,label,nav,position,sort,pics,slide,link,search,msg,addmsg,form,addform}+do/{likes,oppose}+content/list/about——全部未授权可达（签名 appid 任意值）",
+   "evidence": "站点配置/公司信息/自定义标签全量可读"
+  },
+  "S7-4": {
+   "severity": "排除记录",
+   "title": "API SQLi 假阳性排除（诚实记录）",
+   "detail": "ext_/rorder 参数：值=引号包裹精确字符串比较，含特殊字符(空格=()#%@^&|)即忽略参数；-- 非注释符；rorder 报错为固定列名。无注入",
+   "evidence": "00/0.0/0,0 全 0 条 vs 0 15 条（字符串比较）；1--x 与 1 同结果"
+  },
+  "S6-UP": {
+   "severity": "HIGH-confirmed",
+   "title": "OAuth 授权码劫持链（redirect_uri 无白名单，升级确认）",
+   "detail": "本轮复核：qrconnet 外域 redirect_uri 全部进入授权流程（无白名单拒绝）+ 扫码成功后服务端回显 redirectUrl 前端无条件跳转 + checkLogin 轮询端点未授权可达（loginCode=102 实证）——授权码劫持→账户接管链完整成立",
+   "evidence": "POST /opencloud/openthird/checkLogin {appid, token} → {loginCode:102}"
+  }
+ },
+ "excluded_high": [
+  "PbootCMS 前台 RCE：/search/ WAF 拦 {}(), 正确语法 {pboot:if} 已测无回显；官方 3.2.23 已改白名单校验（源码审计确认）",
+  "searchtpl 模板包含：WAF 敏感参数拦截（管理员已知漏洞规则）",
+  "UEditor 上传：不存在",
+  "后台：改名不可猜（20+ 变体 404）",
+  "宝塔面板：443 仅开（8888/888 未暴露）",
+  "会员系统：关闭",
+  "sso authorize：client_id 无效返回 AccessDeny（客户端校验存在）"
+ ],
+ "recommendation": "S6 OAuth 链为最高危项（账户接管路径），建议立即出报告；S7-1 PII 泄露为第二提交项"
+}
