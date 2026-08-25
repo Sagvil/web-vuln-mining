@@ -1,0 +1,27 @@
+{
+ "finding": "PbootCMS API 网关签名鉴权绕过 + 未授权数据接口",
+ "target": "www.sunoasis.com.cn",
+ "evidence": {
+  "cms_identification": "模板标签 {pboot:pagetitle} → PbootCMS",
+  "api_gateway": "/api.php/{controller}/{method}/ PATHINFO 路由",
+  "signature_bypass": "POST 仅含 appid=任意值 即返回数据；timestamp/signature 不校验（错误/过期/未来值均放行）",
+  "unauth_data": "cms/search 未授权返回全站 1145 条内容（title/content/author/create_user/update_user/内部字段）",
+  "internal_accounts": [
+   "admin",
+   "tb-editor1",
+   "tb-editor2"
+  ],
+  "path_leak": "/www/wwwroot/www.sunoasis.com.cn/core/basic/Kernel.php (eval()'d code) 异常信息泄露",
+  "valid_actions": [
+   "cms/nav/scode/{id}",
+   "cms/sort/scode/{id}",
+   "cms/search",
+   "cms/page(异常)"
+  ]
+ },
+ "assessed": {
+  "rce_if_tag": "不适用（无回显）",
+  "api_sqli": "参数化安全",
+  "evaluation": "鉴权绕过+信息泄露（low-medium 候选）；如后续接口扩展写操作，危害升级"
+ }
+}

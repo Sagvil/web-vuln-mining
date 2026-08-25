@@ -1,0 +1,26 @@
+[
+ [
+  "uploadfile/",
+  403,
+  0,
+  ""
+ ],
+ [
+  "api.php",
+  200,
+  59,
+  "https://www.sunoasis.com.cn/api.php"
+ ],
+ [
+  "log/",
+  200,
+  793,
+  "https://www.sunoasis.com.cn/log/"
+ ],
+ [
+  "cache/",
+  200,
+  795,
+  "https://www.sunoasis.com.cn/cache/"
+ ]
+]
