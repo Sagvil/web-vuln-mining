@@ -1,0 +1,43 @@
+{
+ "campaign": "sunoasis-20260825 R5: WNM 设备面+PbootCMS 控制器穷举",
+ "date": "2026-08-26",
+ "findings": {
+  "S5-1": {
+   "severity": "medium-candidate",
+   "title": "华为 WNM 网管硬编码 AES 密钥（5 台设备通用）",
+   "detail": "login.js 泄露登录/改密凭据加密实现：AES-CBC-128 key=1111111111111111 iv=2222222222222222（硬编码静态密钥）。格式=长度前缀(2位)+用户名+长度前缀+密码。攻击面：若 http 明文通道可达（ssl=false 模式存在），抓包可离线解密全部管理凭据；密钥静态无轮换。",
+   "affected": [
+    "portal.sunoasis.com.cn",
+    "bigdata.sunoasis.com.cn",
+    "em.sunoasis.com.cn",
+    "access.sunoasis.com.cn",
+    "vpn.sunoasis.com.cn"
+   ],
+   "evidence": "/web/frame/login.js: CryptoJS.AES.encrypt(o+b,k,{iv:e,mode:CBC,padding:Pkcs7})"
+  },
+  "S5-2": {
+   "severity": "info",
+   "title": "4 台新 WNM 设备实例确认（资产画像修正）",
+   "detail": "portal/bigdata/em/access 全部为华为 WNM 网管（'Web managerment Home' + '安全产品管理平台' 注释 + /wnm/ 路径），与 vpn 同指纹——共 5 台同型号设备",
+   "evidence": "四台 /web/index.html 2561B 完全一致；/wnm/frame/login.php 返回 {error:Invalid request method, ssl:true}"
+  },
+  "S5-3": {
+   "severity": "info",
+   "title": "localRun 调试模式硬编码 sessionid=abc1234",
+   "detail": "login.js localRun 分支使用硬编码 sessionid=abc1234 直跳管理页；服务端当前不认（404/400），但暴露调试后门代码路径",
+   "evidence": "window.location=BASE_URL+'wnm/frame/index.php?sessionid=abc1234&menu='+h"
+  },
+  "S5-4": {
+   "severity": "info",
+   "title": "PbootCMS API 面穷举完成：cms 为唯一控制器",
+   "detail": "tag/form/guestbook/sitemap/comment/search/uc/home/link/banner 全部 404；写操作接口不存在——API 面仅只读（鉴权绕过影响有限但已确认）",
+   "evidence": "20 控制器×方法矩阵全部 phpstudy 404"
+  }
+ },
+ "not_tested": [
+  "WNM 登录提交（授权边界：不爆破不提交登录）",
+  "http 明文通道（ACL 已过滤 80）",
+  "CVE 比对（公开检索不可用，不编造）"
+ ],
+ "recommendation": "S5-1 硬编码密钥为最可提交项（5 台设备影响面），可配合 S1-4 WAF/指纹与 S4 PbootCMS 鉴权绕过分两个报告提交"
+}
