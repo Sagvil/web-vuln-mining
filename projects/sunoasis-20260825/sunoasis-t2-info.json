@@ -1,0 +1,30 @@
+{
+ "target": "info.sunoasis.com.cn Nuxt 资料中心",
+ "findings": [
+  {
+   "type": "API 面清单",
+   "detail": "27 个 v1 端点全提取（login/register/files/download/users/comment/favorites/send-code/verify-email 等）",
+   "status": "reproduced"
+  },
+  {
+   "type": "API 不可达",
+   "detail": "所有 /v1/* 与 /api/common/upload 被 nginx catch-all 返回 SPA HTML(3106B)，POST/OPTIONS 均同；API 服务器当前未暴露",
+   "status": "environment-limited"
+  },
+  {
+   "type": "证书过期",
+   "detail": "通配符证书 *.sunoasis.com.cn 已于 2026-08-23 过期（DigiCert GeoTrust TLS RSA CA G1）",
+   "status": "confirmed",
+   "severity": "info"
+  },
+  {
+   "type": "前端技术栈",
+   "detail": "Nuxt3 + element-plus + vue3，纯 SPA（payload {data:-1} 未预渲染）",
+   "status": "confirmed"
+  }
+ ],
+ "next_steps": [
+  "浏览器渲染后观察 API 调用（若前端调外部/内网域则直接暴露）",
+  "监控 /v1 恢复可用（API 上线后 27 端点即攻击面）"
+ ]
+}

@@ -1,0 +1,23 @@
+{
+ "target": "www.sunoasis.com.cn /search/",
+ "findings": [
+  {
+   "type": "WAF 字符黑名单（404 伪装）",
+   "detail": "keyword 含 ' \" ; ( % | < > &#39; %u0027 %df%27 %2527 等 → 404 phpstudy 模板(1524B)；字母/数字/中文/反斜杠/tab/换行/反引号/%a0/%c0%a7 → 正常搜索页(31KB)",
+   "status": "reproduced"
+  },
+  {
+   "type": "服务器指纹泄露",
+   "detail": "404 页品牌模板暴露 phpstudy；正常页 Server: nginx",
+   "status": "confirmed",
+   "severity": "info"
+  },
+  {
+   "type": "搜索功能正常",
+   "detail": "keyword=中文正常返回；field/scode 隐藏参数存在",
+   "status": "confirmed"
+  }
+ ],
+ "verdict": "WAF 有效拦截注入特征；未发现可注入点（常规编码无法绕过）",
+ "next": "如需继续：浏览器级 JS 渲染或 field 参数枚举"
+}

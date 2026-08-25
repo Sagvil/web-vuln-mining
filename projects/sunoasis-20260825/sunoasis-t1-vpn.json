@@ -1,0 +1,17 @@
+{
+ "target": "SSL VPN 网管 ×4 (access/bigdata/em/portal.sunoasis.com.cn)",
+ "fingerprint": {
+  "product_class": "国产 SSL VPN 网关 wnm 管理面",
+  "evidence": [
+   "Server: HTTPD",
+   "/web/index.html → frame/login.html 重定向链",
+   "Metronic admin 模板 + aes.js 前端加密",
+   "form action=frame/index.php POST"
+  ],
+  "version_visibility": "静态资源全被网关拦(400)，版本号不可见",
+  "instances": "4 实例同 Last-Modified(2025-11-26) = 同一固件批次"
+ },
+ "cve_check": "BLOCKED — 版本无法指纹，无法精确核对已知 CVE；不做登录爆破/伪造提交",
+ "verdict": "recon-limited（指纹受限）",
+ "next": "如需深入需浏览器级探测（JS 渲染后行为），建议单独授权"
+}
