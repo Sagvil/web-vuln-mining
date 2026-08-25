@@ -1,0 +1,29 @@
+{
+ "target": "ecm.tbea.com（集团 ECM 企业内容管理，info 文件外链指向）",
+ "fingerprint": {
+  "product": "inbiz ECM 8.2.0.0（umi.js SPA + inbizPluginInterface 插件架构 + antd）",
+  "version_leak": "vendor.js?v=8.2.0.0 与 versionNum=\"8.2.0.0\"",
+  "login": "集团统一身份 /isp/service/oauthlogin/auth/IntegrationLogin（token 验证失败跳转）"
+ },
+ "findings": [
+  {
+   "id": "S4-1",
+   "type": "版本号公开",
+   "severity": "info",
+   "detail": "inbiz ECM 8.2.0.0 版本号泄露（vendor.js 参数 + 内联 versionNum）"
+  },
+  {
+   "id": "S4-2",
+   "type": "匿名外发机制确认",
+   "severity": "info",
+   "detail": "indrive?anonymous=outpush&code=XXX 链接为公开站外发机制；后端 API 全部 403 需 token（鉴权有效）；403 body 泄露 OAuth 集成登录路径"
+  },
+  {
+   "id": "S4-3",
+   "type": "API 面测绘",
+   "severity": "info",
+   "detail": "umi.js 提取 /inbiz/org/api/OrgUser/GetUserInfoByToken、/inbiz/api/EngineAppManager/GetAppInfoByAppId 等；全部需认证"
+  }
+ ],
+ "verdict": "ECM 鉴权完整（403 token 拦截）；版本泄露为唯一产出；isp 统一身份平台为集团级新面"
+}

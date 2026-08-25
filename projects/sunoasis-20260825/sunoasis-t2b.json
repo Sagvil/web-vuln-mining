@@ -1,0 +1,29 @@
+{
+ "target": "info.sunoasis.com.cn/backend/v1/* (真实 API 前缀)",
+ "breakthrough": "浏览器渲染发现真实 API 前缀 /backend/v1/（/v1/ 是 SPA 路由）",
+ "findings": [
+  {
+   "id": "S2-1",
+   "type": "未授权 API 数据访问",
+   "severity": "info",
+   "detail": "POST /backend/v1/files/search 未授权返回全部公开文件列表（40 条可见，total=96）；含 title/fileNo/url(ecm.tbea.com 外链)",
+   "evidence": "filesId 参数从 Bdmohcu1.js 反编译确认；detail/relation/comment 均未授权可调"
+  },
+  {
+   "id": "S2-2",
+   "type": "IDOR 枚举验证",
+   "severity": "info",
+   "detail": "枚举 filesId 90-260/1-400/401-600：全部 userLevel=0 公开文件，无受限文件可越权读取；total 96 与可见 40 的差=草稿/未发布/下架（detail 返回 20016 不存在）",
+   "evidence": "受限文件验证 0 命中 → 后端权限控制有效"
+  },
+  {
+   "id": "S2-3",
+   "type": "内部系统路径泄露",
+   "severity": "info",
+   "detail": "文件外链指向 ecm.tbea.com（集团 ECM 文档系统，indrive?anonymous=outpush 匿名外发机制）",
+   "evidence": "files/search 响应 url 字段"
+  }
+ ],
+ "verdict": "资料中心为公开站，未授权访问属正常功能；未发现越权（IDOR 枚举 600+ ID 全部 level=0 或不存在）",
+ "note": "high-value: ecm.tbea.com 匿名外发链接机制值得单独一轮（集团文档系统）"
+}

@@ -1,0 +1,26 @@
+{
+ "date": "2026-08-25",
+ "xss_surface_check": {
+  "www_search": {
+   "echo_points": [
+    "<title>{keyword}-搜索结果",
+    "<h3>关键词: {keyword}</h3>"
+   ],
+   "waf": "字符黑名单（' \" ; ( % | < >）404 伪装；overlong/全角/双编码均无效（规范化丢弃）",
+   "verdict": "反射 XSS 需先破 WAF——常规绕过全败"
+  },
+  "info_backend": {
+   "storage_xss_landing": [
+    "detail.title/tags/description 渲染",
+    "comment 列表渲染"
+   ],
+   "write_auth": "comment/save 等写接口全部要求 Authorization 头（code 10000）",
+   "verdict": "存储 XSS 落点存在但写入需登录；需注册通道"
+  },
+  "cname_takeover": {
+   "checked": 21,
+   "hits": 0,
+   "verdict": "无悬空 CNAME，接管面不存在"
+  }
+ }
+}
