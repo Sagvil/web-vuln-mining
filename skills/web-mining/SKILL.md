@@ -1,7 +1,7 @@
 ---
 name: web-mining
 description: Use only when explicitly invoked as $web-mining or when the user says "进入渗透编排模式". Coordinate bounded local-lab, source, or approved-scope Web/API vulnerability mining with existing governance and reproducible evidence.
-version: 4.4.0
+version: 4.4.1
 metadata:
   hermes:
     tags: [web, api, evidence, profiles, governance]
@@ -251,6 +251,14 @@ projects/<target-name>-<YYYYMMDD>/
 
 - Folder name = 主域名去 TLD + 建立日期（如 `sunoasis-20260825`）；子域
   （info./sso./ecm.…）产出的数据一律进同一个文件夹，不按子域再拆。
+- **Every campaign folder carries a README.md from day one**, following
+  `templates/campaign-readme-template.md` (adapted from Cornell University
+  Library's Writing READMEs for Research Data): five fixed sections — 战役概要
+  (scope/platform/period/boundary), 文件分布与功能 (annotated file tree +
+  naming rules), 访问与共享约束 (sensitivity checklist), 方法论与复现线索
+  (channel + R#→file→commit index), 关联文档. Update the R# index table at
+  every round close; keep section order and ISO dates consistent so the tree
+  is machine-scannable.
 - `runs/` 是带时间戳的原始流水区；每轮结束把要留存的产物 cp 进 campaign
   文件夹再 commit——campaign 文件夹是唯一对外可追溯的完整证据集。
 - 下载的敏感文件本体只存 campaign 内并配 MD5 manifest；报告与聊天只引用

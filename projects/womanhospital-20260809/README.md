@@ -1,18 +1,18 @@
-# butian-welfare 批次 战役数据归档
+# womanhospital（妇院）#64679 战役数据归档
 
 ## 一、战役概要 (General Information)
 
 | 项目 | 内容 |
 |---|---|
 | 目标主域 | <主域> |
-| 战役周期 | 20260803 |
-| 归档根目录 | projects/butian-welfare-20260803/ |
-| 一句话结论 | 福利站批次产物 |
+| 战役周期 | 20260809 |
+| 归档根目录 | projects/womanhospital-20260809/ |
+| 一句话结论 | N1 ir/lac AutoLogin DES 取证三轮收官；草稿待用户手动提交 |
 
 ## 二、文件分布与功能 (Data and File Overview)
 
 ```
-butian-welfare-20260803/
+womanhospital-20260809/
 ├── README.md                ← 本文件
 └── （其余文件待补充索引）
 ```
