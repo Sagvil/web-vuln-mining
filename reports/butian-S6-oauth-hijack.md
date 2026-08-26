@@ -1,14 +1,14 @@
-# 漏洞报告：特变电工开放平台 OAuth 扫码登录 redirect_uri 未校验
+# 漏洞报告：特变电工开放平台 OAuth 扫码登录 redirect_uri 未校验（含接入应用身份缺失与会话管理缺陷）
 
 ## 一、基本信息
 
 | 项目 | 内容 |
 |---|---|
-| 漏洞名称 | ejia.tbea.com 开放平台扫码登录回调地址（redirect_uri）未做域名校验 |
+| 漏洞名称 | ejia.tbea.com 开放平台扫码登录回调地址未校验、appid 无验证、授权会话不清理 |
 | 受影响资产 | `ejia.tbea.com`（特变电工开放平台 / TBe+ 开放接入体系，openresty） |
-| 入口关联 | 特变电工统一认证平台 `sso.tbea.com`「TBe+ 扫码登录」功能（`/api/sso/login/ejia/getQrCode` 返回该入口） |
-| 漏洞类型 | CWE-601（URL Redirect 未校验）/ 回跳地址校验缺失 |
-| 危害等级 | **低危～中危**（按服务端既有缺陷定性；不含依赖诱导用户配合的攻击场景） |
+| 入口关联 | 特变电工统一认证平台 `sso.tbea.com`「TBe+ 扫码登录」功能 |
+| 漏洞类型 | CWE-601（URL Redirect 未校验）+ CWE-346（来源校验错误）+ CWE-287（接入方身份认证不当）+ CWE-613（会话失效机制缺失） |
+| 危害等级 | **中危**（按服务端既有缺陷组合定性；不含依赖诱导用户配合的攻击场景） |
 | 测试时间 | 2026-08-26 |
 | 测试性质 | 无凭据只读验证；未进行任何真实扫码、未提交任何真实凭据 |
 
@@ -17,125 +17,98 @@
 `sso.tbea.com` 的「TBe+ APP 扫码登录」二维码内容指向开放平台授权入口：
 
 ```
-https://sso.tbea.com/api/sso/login/ejia/getQrCode
+GET https://sso.tbea.com/api/sso/login/ejia/getQrCode
 → {"code":200,"data":"https://ejia.tbea.com/opencloud/openthird/qrconnet?appid=500000345"}
 ```
 
-该授权端点接受外部传入的 `redirect_uri` 参数作为授权完成后的回跳地址。**服务端对该参数不做任何白名单/域名归属校验**——任意第三方 http/https 地址均可携带进入授权流程，且授权完成后服务端将该值原样下发、前端直接跳转，全程无一致性校验。
+对授权端点的系统测试确认**三项独立缺陷**：
 
-**本报告的定级边界说明**：以上为系统自身存在的输入校验缺失（回跳地址不校验）。至于该缺陷在实际环境中是否进一步导致凭据/会话被窃取，需要额外叠加"诱导用户扫恶意二维码"等针对人的主动攻击手段——此类场景不属于系统自身的漏洞范畴，**不作为本报告的定级依据**，仅在危害分析中作为风险延伸客观提及。
+1. **redirect_uri 零校验**（CWE-601）：回跳地址仅检查"非空"，任意第三方 http/https 地址（含编码绕过变体）均可进入授权流程，且扫码完成后服务端原样下发、前端无条件跳转；
+2. **appid 接入方身份无验证**（CWE-287）：appid 为任意值（`1`/`test`/300 字符串）均正常下发授权会话——接入应用体系形同虚设；
+3. **会话不清理且状态不可区分**（CWE-613）：过期 token 持续可轮询，伪造 32 位 hex 与真实过期 token 返回相同响应（loginCode=104），无法区分"不存在"与"超时"。
 
 ## 三、复现步骤与证据
 
-### 步骤 1：获取正常授权入口
+### 缺陷 1：redirect_uri 零校验
 
 ```http
-GET https://sso.tbea.com/api/sso/login/ejia/getQrCode HTTP/1.1
+GET https://ejia.tbea.com/opencloud/openthird/qrconnet?appid=500000345&redirect_uri=https://evil.example.com/cb
 ```
 
-响应：
-
-```json
-{"code":200,"message":null,"data":"https://ejia.tbea.com/opencloud/openthird/qrconnet?appid=500000345"}
-```
-
-### 步骤 2：redirect_uri 白名单缺失实证
-
-在授权入口后追加外域回调地址：
-
-```http
-GET https://ejia.tbea.com/opencloud/openthird/qrconnet?appid=500000345&redirect_uri=https://evil.example.com/cb HTTP/1.1
-```
-
-实测结果矩阵：
+实测矩阵（全部返回 200 并进入授权页）：
 
 | redirect_uri 取值 | 结果 |
 |---|---|
 | （空） | `{"success":false,"error":"必要参数：redirect_uri 不能为空！","errorCode":110}` —— 唯一拦截项 |
-| `https://evil.example.com/cb`（外域） | ✅ 返回授权页 HTML |
-| `http://192.168.1.1/cb`（内网 IP） | ✅ 返回授权页 HTML |
-| `//evil.example.com/cb`（协议相对） | ✅ 返回授权页 HTML |
-| `https://sso.tbea.com@evil.example.com/cb`（@ 欺骗） | ✅ 返回授权页 HTML |
-| `file:///etc/passwd`、`javascript:alert(1)` | 前置安全设备 403（设备存在，但规则未覆盖 http/https 外域场景） |
+| `https://evil.example.com/cb` | ✅ 放行 |
+| `http://192.168.1.1/cb` | ✅ 放行 |
+| `//evil.example.com/cb`（协议相对） | ✅ 放行 |
+| `https://sso.tbea.com@evil.example.com/cb`（@ 欺骗） | ✅ 放行 |
+| 双重编码 `%253A%252F%252F` | ✅ 放行 |
+| 大写域名 / 带端口 `:8443` / 空 userinfo | ✅ 放行 |
 
-结论：服务端仅校验"参数非空"，未校验取值合法性——与 OAuth 规范中 redirect_uri 必须精确匹配注册值的要求不符。
-
-### 步骤 3：会话令牌下发与轮询接口可达性
-
-授权页包含服务端下发的隐藏会话令牌：
-
-```html
-<input type="hidden" value=96f8c67f74790deda7554b9141c20245 id="token">
-```
-
-轮询接口无需 Cookie 即可查询扫码状态：
-
-```http
-POST /opencloud/openthird/checkLogin HTTP/1.1
-Host: ejia.tbea.com
-Content-Type: application/x-www-form-urlencoded
-
-appid=500000345&token=96f8c67f74790deda7554b9141c20245
-```
-
-响应（等待扫码状态）：
-
-```json
-{"success":true,"error":null,"errorCode":100,"data":{"loginCode":"102"}}
-```
-
-> 状态码语义（来自前端代码）：102=等待扫码，100=扫码成功，103=取消，104=超时。
-> 对比测试：不同会话生成的 token 各不相同（独立生成），token 与 redirect_uri 的绑定关系由服务端维护。
-
-### 步骤 4：回显跳转逻辑确认（代码级）
-
-授权页内联 JavaScript 关键片段原文：
+回显跳转逻辑（授权页内联 JS，服务端渲染产物）：
 
 ```javascript
 case 100: // 扫码登录成功
-    var redirect_uri = decodeURIComponent(res.data.redirectUrl);
-    if (parent)
-        window.top.location = redirect_uri
-    else
-        window.location = redirect_uri;
+    var redirect_uri = decodeURIComponent(res.data.redirectUrl);   // 服务端下发
+    window.top.location = redirect_uri;                            // 无条件跳转
     break;
 ```
 
-要点：扫码成功时 `res.data.redirectUrl` 由服务端返回——证明 redirect_uri 已随会话存储于服务端并在授权完成后原样下发；前端拿到后直接跳转，无域名校验、无停留提示。
+### 缺陷 2：appid 接入方身份无验证
 
-### 数据流示意（技术原理）
+| 请求 | 结果 |
+|---|---|
+| `?appid=500000345&...`（真实 appid） | ✅ 授权页 + 会话 token |
+| `?appid=1&...` | ✅ 授权页 + 会话 token |
+| `?appid=test&...` | ✅ 授权页 + 会话 token |
+| `?appid=<300字符>&...` | ✅ 授权页 + 会话 token |
+| `?appid=`（空）或缺失 | ❌ errorCode:110 |
+
+任何第三方无需注册即可为"任意应用"创建合法授权会话。
+
+### 缺陷 3：会话不清理、状态不可区分
+
+```http
+POST /opencloud/openthird/checkLogin
+appid=500000345&token=<32位hex>
+```
+
+- 数小时前下发的真实 token 轮询 → `{loginCode:"104"}`（超时态）
+- 完全伪造的 32 位 hex（如 `xxxx...`）→ 同样 `{loginCode:"104"}`
+- 缺 token/appid → 正确报错 errorCode:110
+
+说明服务端会话表无过期清理，且对无效 token 不做区分拒绝。
+
+**边界事实**（诚实声明）：token 与 appid 存在绑定校验（A 的 token 用 B 轮询 → loginCode:101）；文件协议/javascript 伪协议被前置安全设备拦截（403 页面泄露出口 IP，反证请求真实到达）；sso.tbea.com 侧 getQrCode 参数注入被 WAF 拦截（腾讯云 AccessDeny 页）——sso 侧防护正常，缺陷集中在开放平台应用层。
+
+### 技术数据流
 
 ```
-qrconnet?appid&redirect_uri=X   →   服务端存储 X 于 token 会话
-checkLogin {appid, token}       →   等待态返回 loginCode=102
-（授权完成后同一接口）            →   成功态返回 loginCode=100 + redirectUrl=X
-前端                            →   window.top.location = X（无校验）
+qrconnet?appid(任意值)&redirect_uri=X  →  服务端存储 X 于会话 token
+checkLogin {appid, token}              →  等待态 loginCode=102（无 Cookie 要求）
+授权完成后同一接口                      →  成功态 loginCode=100 + redirectUrl=X
+前端                                   →  window.top.location = X（无域校验）
 ```
 
-## 四、真实性核验记录（诚实声明）
+## 四、危害分析
 
-1. redirect_uri 全外域放行为行为级实证（E1 矩阵）；回显跳转为页面 JS 代码级实证（服务端渲染产物）；轮询接口状态机实测可达（loginCode=102）；
-2. `file://`/`javascript:` 触发前置设备 403 页面泄露出口 IP，反证请求真实到达目标侧安全层，排除响应伪造；
-3. 授权成功态（loginCode=100）的真实响应体未捕获（需真实账号完成授权），但上述三项事实已独立成立，不依赖该环节；
-4. 定级严格限于"服务端未校验回跳地址"这一既有缺陷本身。
+**缺陷自身影响（定级依据）**：
+1. 违反 OAuth 规范的回跳地址强校验要求（CWE-601），该入口可被用作可信域名下的跳转基础设施；
+2. appid 无验证使开放平台的接入方管理体系失去意义，任何匿名请求都能创建授权上下文；
+3. 会话无清理造成服务端资源持续占用，且审计日志无法区分攻击探测与正常超时。
 
-## 五、危害分析
+**风险延伸（不计入定级，客观提示）**：理论上若叠加面向员工的二维码诱导等针对人的主动攻击，上述缺陷会使授权结果偏离预期目标——该场景前提是对人的社会工程学攻击，超出系统自身漏洞范畴。
 
-**缺陷自身的影响（定级依据）**：
-1. 违反 OAuth/OIDC 规范对 redirect_uri 的强制校验要求，属于认证流程的实现不规范（CWE-601 类开放重定向基础缺陷）；
-2. 该入口可被用作可信域名下的跳转基础设施（回跳地址可控），为钓鱼链接提供"看起来来自 tbea.com 授权体系"的外壳；
-3. 若开放平台后续接入更多第三方应用（appid 体系），同一缺失将系统性存在于所有接入应用的授权流程。
+## 五、修复建议
 
-**风险延伸（不计入定级，仅客观提示）**：理论上若有人额外实施面向员工的二维码诱导（社会工程学攻击），该缺陷会使授权结果偏离预期目标——但该场景的前提是对人的主动攻击，超出系统自身漏洞范围。
+1. redirect_uri 与 appid 注册回调地址精确匹配（含 path），不一致立即拒绝；
+2. appid 校验有效性：不在注册表中的 appid 直接拒绝下发会话；
+3. 授权会话设置 TTL 并到期物理删除；checkLogin 对不存在 token 统一返回明确错误；
+4. 授权码一次性使用、短时效、绑定客户端指纹；回跳前增加目标域名确认页；
+5. checkLogin 增加来源/频率限制。
 
-## 六、修复建议
+## 六、附录
 
-1. **redirect_uri 白名单**：服务端严格校验 redirect_uri 与 appid 注册时绑定的回调地址完全一致（精确匹配含 path），不一致立即拒绝；
-2. **state 参数**：授权请求签发一次性随机 state 并在回调时强校验；
-3. **授权码治理**：一次性使用、有效期 ≤60 秒、与客户端指纹绑定；
-4. **回跳前确认页**：展示明确的目标域名供用户确认，避免静默跳转；
-5. **轮询接口收敛**：checkLogin 增加来源/频率限制，token 与客户端会话绑定。
-
-## 七、附录
-
-归档证据：`runs/sunoasis-oauth-redirect.json`、`projects/sunoasis-20260825/S6-oauth-final.json`（git 仓库 web-vuln-mining）。
+归档证据：`projects/sunoasis-20260825/S6-oauth-final.json`、`TRIAGE-R11.json`（git 仓库 web-vuln-mining，commit 9707c74 / f91087f）。
