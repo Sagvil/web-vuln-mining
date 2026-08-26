@@ -1,7 +1,7 @@
 ---
 name: web-mining
 description: Use only when explicitly invoked as $web-mining or when the user says "进入渗透编排模式". Coordinate bounded local-lab, source, or approved-scope Web/API vulnerability mining with existing governance and reproducible evidence.
-version: 4.3.0
+version: 4.3.1
 metadata:
   hermes:
     tags: [web, api, evidence, profiles, governance]
@@ -186,6 +186,25 @@ the files themselves to reports or chat.
 
 - Every response field is an entry point: leaked domains, url fields, QR-code
   contents, embedded app names — chase each to existence + access checks.
+- Metadata-delta probing: a paginated endpoint's `total` versus its actual
+  reachable rows is mathematical proof of hidden resources BEFORE any attack —
+  check metadata consistency first to decide whether enumeration is worthwhile.
+- Framework fingerprint → route convention: after identifying the framework,
+  derive routes from its documented routing style instead of wordlist-brute;
+  one correct guess pattern enumerates the full API surface silently.
+- Status-code lexicography: feed an endpoint systematically varied inputs (real
+  token / forged / cross-context / absent), assign meaning to every distinct
+  code, and draw the protocol state machine — new observations then localize
+  instantly and anomalies stand out.
+- Defense horizontal-comparison: identical-vendor assets often carry very
+  different protection layers; the weakest layer is both the entry point and
+  the control group proving the flaw is application-layer, not network-layer.
+- Non-HTML assets are intelligence: QR PNGs decode to new domains, PDF metadata
+  leaks internal author names, image EXIF survives re-upload — intel does not
+  live only in HTML.
+- Dual-channel cross-confirmation: browser real-TLS stack (when raw sockets get
+  extension-filtered) versus server-side direct connection (no-Cookie control);
+  settle a claim only when both channels agree.
 - Frontend JS outranks blind scanning: route constant tables enumerate the full
   API surface in one fetch; axios interceptor whitelists directly name the
   token-free endpoints; route-specific chunks hold business state constants.
@@ -198,6 +217,22 @@ the files themselves to reports or chat.
 - Single-hit PoC ≠ scale: full-range enumeration converts a PoC into severity-
   relevant numbers; budget time for it on slow targets (concurrency pool +
   segmented execution + incremental disk persistence).
+
+### Engineering Pitfalls (browser/automation channel)
+
+- Late XHR hook trap: injecting an XHR/fetch hook after page load misses all
+  prior traffic. For post-hoc forensics use
+  `performance.getEntriesByType('resource')`; for full coverage inject via CDP
+  before navigation, then reload.
+- SPA data residue: inspect localStorage/sessionStorage before chasing network
+  captures — apps routinely persist file guids, share tokens, and preview state
+  there.
+- Slow-target trio: bounded concurrency pool (6–8) + segmented batches (≤500
+  ids per pass) + immediate disk persistence per segment; zero-loss across
+  multi-thousand-request sweeps depends on it.
+- Server-clamped parameters (pageSize locked by the backend): stop fighting the
+  list endpoint; switch to the per-item detail channel to bypass pagination
+  limits.
 
 ### Report Writing Rules
 
