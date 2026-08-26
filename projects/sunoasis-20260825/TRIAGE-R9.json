@@ -1,0 +1,31 @@
+{
+ "campaign": "sunoasis R9: IDOR 文档越权+文档云 SecretKey 泄露",
+ "date": "2026-08-26",
+ "findings": {
+  "S8-1": {
+   "severity": "medium-high（内部资料批量越权读取）",
+   "title": "info.sunoasis.com.cn /v1/detail 未授权 IDOR——119 个列表不可见文档全部可读",
+   "detail": "POST /backend/v1/detail {filesId:N} 无认证。files/search 列表仅显示 40 篇（total=96），但 detail 接口对 filesId=1~300 枚举命中 119 个列表外文档，含内部方案：电力交易辅助决策解决方案介绍(外发)/特变电工零碳园区建设方案/储能EMS产品介绍/基于AI技术的新能源场站智慧运营管理解决方案/TB-eCloud SCADA 解决方案等",
+   "evidence": "filesId=171 → fileNo=ZHJK-20260429-0010, tags=[营销资料,方案概述], userLevel=0, url=https://ecm.tbea.com/indrive?anonymous=outpush&pluginId=publish&code=A3dc...",
+   "impact": "未发布/隐藏产品手册、内部营销与解决方案文档批量暴露；viewCount 显示部分文档已有真实浏览记录"
+  },
+  "S8-2": {
+   "severity": "medium（引擎签名密钥泄露）",
+   "title": "ecm.tbea.com 文档云引擎 app/info 匿名返回 SecretKey",
+   "detail": "GET /inbiz/api/services/front/engines/v3/app/info?domain=indrive 无任何凭据返回应用完整配置，含 SecretKey=tNH3aA2U7XYJktGm4sScQcA45NMefkRnXJQmX6mfXjX、AppId、PermissionValue=0、IsReleased=true",
+   "evidence": "服务端直接验证（无 Cookie）200 返回 3233B 完整 App 配置 JSON",
+   "impact": "SecretKey 为引擎接口签名密钥，攻击者可伪造合法签名的 API 调用；配合 S8-1 的 indrive code 链接可进一步探索文档内容接口"
+  },
+  "S8-3": {
+   "severity": "info",
+   "title": "cms:8443 登录页上线（部署进行中）",
+   "detail": "7594B 完整登录壳（username/loginForm/sweb-lib 框架），但全部 JS 资源 404（部署不完整）。响应头含 HSTS/CSP/XFO 完整安全配置。按边界仅记录不提交登录"
+  },
+  "S8-4": {
+   "severity": "排除记录",
+   "title": "TLS SAN 收割：无新子域",
+   "detail": "10 主机证书均为泛域名（sunoasis.com.cn/tbea.com），无新增资产线索"
+  }
+ },
+ "chain_potential": "S8-1(IDOR 列表) → S8-2(SecretKey) → indrive code 预览链接 → 若 SecretKey 可伪造签名则文档全文可读（待后续验证）"
+}
