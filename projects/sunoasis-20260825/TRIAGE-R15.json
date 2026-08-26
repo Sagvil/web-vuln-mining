@@ -1,0 +1,36 @@
+{
+ "campaign": "sunoasis R15: 管理后台直访判定+扫码确认链逆向（ejia submit 端点）",
+ "date": "2026-08-26",
+ "verdict_admin_direct_access": {
+  "question": "管理后台能否不经管理员扫码直接访问？",
+  "answer": "否——管理后台无公网入口，且登录确认必须持有效 APP 会话",
+  "evidence_chain": [
+   "① consoleDomain=portal-backend.tbea.com 无公网 DNS 解析（getent 无记录）——管理后台部署在内网",
+   "② sso/tbportal SPA 前端路由无 /console /admin（浏览器实测'页面没找到'）",
+   "③ sso Spring Boot 后端：分组 swagger 文档(/sso/v2/api-docs 等)401 token 缺失——API 面受网关鉴权保护",
+   "④ 聚合 /api/v2/api-docs 匿名 200 但 0 端点 0 定义（空壳，仅泄露 host=portal-gateway:8080 内网架构）",
+   "⑤ 扫码状态机推进必须经 updateCodeStatus/submit，两者均要求有效会话（401/token超时）——无管理员会话无法产生授权凭证"
+  ]
+ },
+ "new_findings": {
+  "S12-1": {
+   "severity": "info-low（架构信息泄露）",
+   "title": "sso.tbea.com Swagger 文档端点暴露（内网架构泄露）",
+   "detail": "/api/v2/api-docs + /api/v3/api-docs + /api/swagger-resources 匿名可达；swagger-resources 泄露 4 个微服务名: todo-center/cms-center/sso/portal；聚合文档 host 字段泄露内网网关 portal-gateway:8080。分组文档本身 401 受保护——仅元数据泄露"
+  },
+  "S12-2": {
+   "severity": "证据补强",
+   "title": "ejia 扫码确认链完整逆向",
+   "detail": "二维码解码→APP 打开 qrlogin 页(laid/yf/sourceAppName=TBPortal/token)→页面 JS 调 POST /opencloud/openthird/submit {appid, token, entry:1|2, ticket}。ticket 由 TBe+ APP webview 注入（XuntongJSBridge）=设备会话凭证。实测: 空ticket报参数缺失, 假ticket报'提交token超时'——submit 需真实 APP 会话 ticket, 无法匿名伪造确认"
+  },
+  "S12-3": {
+   "severity": "info（凭证格式判定）",
+   "title": "oauth2/gen 与 ejia ticket 的错误响应无格式区分",
+   "detail": "纯数字/uuid/JWT 样式 code 全部返回同一错误('获取access_token失败')；ejia ticket 同样统一返回'超过有效期'——服务端不泄露凭证格式信息, 无法通过错误侧信道缩小凭证空间"
+  }
+ },
+ "impact_reassessment": {
+  "S6_S11_final": "扫码劫持链的确认环节被正确保护（updateCodeStatus 需 itb 会话; ejia submit 需 APP 注入 ticket）。匿名可完成的只有: 二维码生成(任意appId含管理后台) + 会话状态轮询 + 凭证交换端点探测。定级维持中危(缺陷组合), 不升级高危",
+  "admin_risk_note": "管理后台虽不可直访, 但 appQrGenerator 可匿名生成'管理后台登录确认'二维码——若叠加社工(不计入定级)危害放大"
+ }
+}
