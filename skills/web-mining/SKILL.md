@@ -1,7 +1,7 @@
 ---
 name: web-mining
 description: Use only when explicitly invoked as $web-mining or when the user says "进入渗透编排模式". Coordinate bounded local-lab, source, or approved-scope Web/API vulnerability mining with existing governance and reproducible evidence.
-version: 4.4.1
+version: 4.5.0
 metadata:
   hermes:
     tags: [web, api, evidence, profiles, governance]
@@ -277,3 +277,34 @@ projects/<target-name>-<YYYYMMDD>/
   review cost approaches zero.
 - Same-root-flaw multi-instance findings may amplify the argument only after
   scope ownership for every instance is user-confirmed.
+- The report is NOT a display of "how much data I collected"; it proves one
+  explicit chain — flaw → unauthorized behavior → actual impact — with the
+  smallest, reviewable, redactable evidence set.
+- Six-layer evidence stack (every report must cover all six): 资产归属 →
+  认证边界(拒绝基线) → 绕过行为(最小参数改变) → 业务响应(code 而非 HTTP 200) →
+  影响闭环(读/写/回读) → 范围边界(未验证什么). A missing layer weakens the
+  whole report.
+- Controlled-variable design beats screenshots: same endpoint, same method,
+  only auth parameters change; establish the rejection baseline first, then
+  prove minimal bypass, then prove bogus signature/expired timestamp also
+  passes. Label the test values (timestamp=0, signature=deadbeef) as deliberate
+  and never expose the page-issued valid signature.
+- Separating current vs historical evidence: never write archived facts in
+  present tense. If a current-state check is wanted, use a minimal probe —
+  Range GET with first-512KiB-only (read headers + first 8 bytes, save
+  nothing) is the reusable pattern for file-exposure verification: 206 +
+  Content-Type + full object length + %PDF header + no auth proves exposure
+  without bringing the file back.
+- Severity wording: "current evidence supports medium; platform may re-rate if
+  broader scope is confirmed" beats "high/critical" claims; never include
+  unverified impact (account takeover, batch exfil, RCE) in the rating
+  rationale.
+- Precision in wording: "任意非空 appid" not "任意 appid"; "已测接口存在" not
+  "所有 API 均可绕过"; "本次检索未发现" not "全网不存在".
+- Pre-submission checklist: title = one root cause; summary answers
+  asset/endpoint/broken-boundary/verified-impact in 3-5 sentences; ≥1 rejection
+  baseline + ≥1 bypass contrast; impact closed via read/write/readback or file
+  header; single object not extrapolated to all objects; no PII/Cookie/Token/
+  secret/full internal files uploaded; screenshots show request+target+status+
+  conclusion; fix advice targets root cause; A/B-style reports submitted
+  separately with cross-references.
