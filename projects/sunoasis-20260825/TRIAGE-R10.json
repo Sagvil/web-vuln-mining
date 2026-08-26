@@ -1,0 +1,33 @@
+{
+ "campaign": "sunoasis R10: 后台路径复核+WNM JS 取证+indrive 签名机制探查",
+ "date": "2026-08-26",
+ "findings": {
+  "S9-1": {
+   "severity": "info",
+   "title": "www /admin.php 官方后台入口不存在",
+   "detail": "官方默认 admin.php 全部 404——管理员已删除/改名入口文件，与 R5 改名枚举结论一致"
+  },
+  "S9-2": {
+   "severity": "info（证据固化）",
+   "title": "WNM login.js 完整取证（14882B）",
+   "detail": "通过浏览器真实 TLS 栈成功拉取 portal login.js（raw socket 400 系服务器对 .js 有 UA/头过滤）。硬编码密钥再次确认：AES-CBC Key=1111111111111111 IV=2222222222222222；localRun 分支 sessionid=abc1234；登录提交 POST getDynUrl('frame/login.php')；验证码端点 vcode.bmp",
+   "evidence_file": "runs/wnm-login-portal.js"
+  },
+  "S9-3": {
+   "severity": "medium（信息泄露，利用链受限）",
+   "title": "ecm 文档云 app/info 匿名泄露 SecretKey（复核确认）+ indrive 匿名访问边界",
+   "detail": "①app/info 无凭据返回 SecretKey/AppId（服务端复测稳定 200）②umi.js 确认 SecretKey 被前端 setApp 存储用于运行时③但 indrive?anonymous=outpush&code=... 实际访问时被服务端重定向到 sso.tbea.com 登录页（integrationredirect 加密 targeturl）——匿名预览需有效 SSO 会话，文档全文读取链路被 SSO 阻断",
+   "impact": "SecretKey 泄露为事实（引擎级签名密钥）；文档越权读取依赖 R9 的 info IDOR（119 篇元数据+直链），全文需 SSO 凭据"
+  }
+ },
+ "chain_status": {
+  "confirmed": [
+   "info IDOR 119 文档元数据+indrive code 直链",
+   "ecm SecretKey 匿名泄露"
+  ],
+  "blocked_by_sso": [
+   "indrive code → 文档全文渲染（需 SSO 会话）"
+  ]
+ },
+ "next": "S8/S9 并入 PII 报告或独立成稿；WNM 密钥解密验证仍受登录边界限制"
+}
