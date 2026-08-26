@@ -1,0 +1,27 @@
+{
+ "campaign": "sunoasis R14: 主SSO二维码内容解码+确认链逆向+防护面确认",
+ "date": "2026-08-26",
+ "findings": {
+  "S11-1": {
+   "severity": "info（新资产）",
+   "title": "itb.tbea.com——iTB 智慧办公 2025（PWA）",
+   "detail": "二维码解码目标：https://itb.tbea.com/itb-sso-h5/login/confirmQR?uuid=...&message=特变电工企业门户管理后台登录确认；首页 129KB title=iTB智慧办公"
+  },
+  "S11-2": {
+   "severity": "确认链逆向（防护正确面）",
+   "title": "扫码确认接口 = /sso/qrcode/updateCodeStatus {status: success/cancel, uuid}",
+   "detail": "前端 confirmQR-Uzth5vrT.js 逆向：gt(a)=Yt.get('/sso/qrcode/updateCodeStatus',{params:a})；we='success', _e='cancel'；tbportal 侧实测 401 token缺失——确认动作需登录会话，攻击者无法代确认"
+  },
+  "S11-3": {
+   "severity": "结论更新",
+   "title": "主SSO扫码链安全画像终版",
+   "detail": "生成(appQrGenerator 无token白名单) + 轮询(queryCodeStatus 无token) 匿名开放；确认(updateCodeStatus 需token) 受保护；交换(oauth2/gen、ejia ticket) 匿名可达但需有效凭证。账户接管需真实扫码（社工）——与 S6 同型定级",
+   "evidence": "tbportal JS 拦截器白名单数组确认: ['/appQrGenerator','/queryCodeStatus'] 免 token"
+  },
+  "excluded": [
+   "ejia opencloud 其他端点全 404（qrconnet/checkLogin 仅有两个活跃端点）",
+   "info /backend/storage/ 目录列禁（403）仅单文件可读",
+   "www /backend/v1/ 补充端点全 404（27 端点清单已穷尽）"
+  ]
+ }
+}
