@@ -1,0 +1,30 @@
+{
+ "campaign": "sunoasis R11: S6/S7 深挖——写入漏洞闭环+隐藏内容批量越权",
+ "date": "2026-08-26",
+ "findings": {
+  "S6-EXT": {
+   "severity": "补充证据",
+   "title": "OAuth qrconnet 边界完整画像",
+   "detail": [
+    "appid 无校验: 任意值(1/test/300字符)均下发授权会话 token——接入应用身份形同虚设",
+    "跨应用会话混淆: appid=A 的 token 用 appid=B 轮询 → loginCode=101（参数校验不通过）→ token 与 appid 绑定校验存在",
+    "会话无清理: 数小时前过期 token 轮询仍返回 loginCode=104（超时态），伪造 32 位 hex 亦返回 104——不区分'不存在'与'超时'",
+    "redirect_uri 编码绕过全放行: 双重编码/大写域名/端口注入/userinfo 空全部进入授权流程",
+    "getQrCode 参数注入被 WAF 拦（腾讯云 AccessDeny 页）——sso 侧二维码内容固定不可控"
+   ]
+  },
+  "S7-UP": {
+   "severity": "medium-high（未授权写入+数据污染实锤）",
+   "title": "cms/addmsg 未授权写入验证成功",
+   "detail": "POST /api.php/cms/addmsg/ 完整参数链(user_push/push_name/push_position/push_number/push_where/user_tel/push_tel) 提交返回「留言提交成功」，fcode=1 记录数 2→3，测试记录 id=4 入库可读——人才推荐表单任意第三方可伪造数据",
+   "poc_record": "id=4 user_push=SECURITY-TEST-DO-NOT-PROCESS（明显标记，供管理员清理）"
+  },
+  "S10": {
+   "severity": "medium（列表外内容批量越权）",
+   "title": "content/index 全量 IDOR——185 篇 sitemap 外内容可枚举",
+   "detail": "content/index 扫描 id 1-1808 命中 907 篇，其中 185 篇不在 sitemap：含 171 篇港股公告类(scode=175, 特变电工股份证券变动月报表/董事名单/ESG 报告等 2018 年历史公告)+14 篇业务页(智慧运维/智慧光伏/柔性储能等)",
+   "note": "status 全为 1（非草稿），主要为下线未删除内容与未挂导航的栏目；API 直接遍历 id 即可绕过前台导航获取"
+  }
+ },
+ "impact_summary": "S7 从'读取 PII'升级为'读写双向': addmsg 写入污染招聘数据流; content/index 遍历暴露全部历史内容(含港股合规公告)"
+}
