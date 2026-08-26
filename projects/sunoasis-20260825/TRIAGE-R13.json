@@ -1,0 +1,32 @@
+{
+ "campaign": "sunoasis R13: 主SSO扫码体系劫持链发现（tbportal.tbea.com）",
+ "date": "2026-08-26",
+ "finding": {
+  "severity": "HIGH-candidate（全集团统一认证主站）",
+  "title": "tbportal.tbea.com 统一认证扫码登录链：任意appId生成管理后台二维码+匿名轮询+匿名ticket/code交换端点",
+  "chain": [
+   "① GET /api/sso/qrcode/appQrGenerator?appId=<任意> → {uuid, qrcode}【无身份验证：appId=1=特变电工企业门户管理后台 也生成】",
+   "② GET /api/sso/qrcode/queryCodeStatus?uuid=X → 匿名轮询：wait态返回appId/appName；成功态返回 userName/state/redirectUri/loginInfo 字段【字段结构实证】",
+   "③ GET /api/sso/login/ejia?ticket=X → 匿名 ticket 交换会话端点【假ticket错误链实证:'ticket超过了有效期'】",
+   "④ GET /api/sso/login/oauth2/gen?code=X → 匿名 code→access_token 交换端点【假code错误链实证:'获取access_token失败'】"
+  ],
+  "evidence": {
+   "E1_任意appId": "appId=1(管理后台)/1100104541409378304 均返回 uuid+qrcode；500000345/ejia 报'应用不存在'（应用表校验形同虚设，未注册名直接不查）",
+   "E2_状态机": "wait态(2s内): {status:wait, appId:1, appName:特变电工企业门户管理后台} → 70s后: {status:outTime, 字段清空}",
+   "E3_匿名端点": "/sso/login/ejia?ticket= 与 /sso/login/oauth2/gen?code= 均无 token 要求，错误信息区分'为空/过期'",
+   "E4_WAF": "redirect_uri 参数名注入被腾讯云 WAF 拦截（大小写/编码/变体全拦）——参数注入面被封，但 appId 未校验与匿名交换端点未受影响"
+  },
+  "impact": "与 S6(ejia) 同型劫持链，但位于集团统一认证主站：任意攻击者可为任意应用(含管理后台)生成登录二维码；扫码成功后轮询方获得 userName/redirectUri/loginInfo——配合 ticket/code 交换端点形成账户接管路径。真实扫码闭环受边界限制未验证",
+  "blocked": "扫码确认需真实 TBe+ 账号（超出无凭据测试边界）"
+ },
+ "asset_notes": {
+  "new": [
+   "tbportal.tbea.com（企业门户，sso 同体系）"
+  ],
+  "leaked_via_login_get": [
+   "sso-test.tbea.com(连接重置)",
+   "portal-backend.tbea.com(DNS不存在)",
+   "defaultClientId=1100104541409378304"
+  ]
+ }
+}
