@@ -1,0 +1,47 @@
+{
+ "title": "危害确认：原本不公开、现在匿名可获取的信息清单",
+ "date": "2026-08-26",
+ "confirmed_exposed": {
+  "A_个人信息(www PbootCMS)": {
+   "items": [
+    "真实姓名×2条记录（车展钊/王皓 等）——人才推荐表单提交者与被推荐人",
+    "手机号×2组（15864641289 / 18063143644）",
+    "推荐人工号/岗位/所在地（值班员/王浩屯等）",
+    "提交者 IP（user_ip 整型存储）+操作系统+浏览器指纹",
+    "内部审核账号名（create_user=admin/tb-editor1/tb-editor2）"
+   ],
+   "原本公开性": "表单数据仅后台可见，无任何前台展示页面——确定非公开",
+   "access_path": "POST /api.php/cms/form/ {appid:任意, fcode:1} 无认证"
+  },
+  "B_内部文档元数据(info 53篇外发文档)": {
+   "items": [
+    "53 篇列表不可见文档的存在性、标题、文件编号(fileNo)、标签、浏览/下载计数",
+    "ecm.tbea.com 外发直链（含 code 令牌）→ 匿名打开可见：文件名、大小(如13.55MB)、版本、分享人真实姓名（何浪）、部门、分享时间",
+    "fileGuid/fileId 内部标识符"
+   ],
+   "原本公开性": "files/search 列表接口刻意过滤未返回这些文档（total=96 vs 实际 159+），属'不公开'范畴；外发链接本应仅送达指定收件人",
+   "access_path": "POST /backend/v1/detail {filesId:N} 遍历 → url 字段直链匿名打开(#/page/outgoing-result)"
+  },
+  "C_全文下载边界": {
+   "status": "被 SSO 拦截——dms 预览 API 匿名 403（token验证失败），文件内容本体未泄露",
+   "residual_risk": "元数据级泄露已实锤；若攻击者持有任意有效 SSO 账号（含低权限外部账号）即可完成全文读取"
+  },
+  "D_隐藏内容(www content IDOR 185篇)": {
+   "items": [
+    "171 篇港股合规公告全文（2018年证券变动月报表/董事名单/ESG报告/股东大会文件——特变电工股份 600089.SH/2208.HK 层面）",
+    "14 篇业务方案页（智慧运维/智慧光伏/柔性储能/电能质量等未上线栏目）"
+   ],
+   "原本公开性": "从 sitemap 与前台导航移除=主动下线，不再对外公开；API 按 id 遍历仍可完整读取正文",
+   "note": "历史合规公告敏感性较低，但下线内容被完整保留可取本身即治理问题"
+  },
+  "E_系统情报": {
+   "items": [
+    "服务器绝对路径 /www/wwwroot/www.sunoasis.com.cn/core/basic/Kernel.php（宝塔环境）",
+    "PbootCMS API 全部19个路由结构、站点配置(company/label/nav)",
+    "ecm 文档云引擎 SecretKey + AppId + PermissionValue",
+    "WNM 网关 AES 密钥(Key/IV)+登录协议格式+调试后门 sessionid",
+    "sso/ejia OAuth 会话机制细节(token格式/appid体系/loginCode状态机)"
+   ]
+  }
+ }
+}
