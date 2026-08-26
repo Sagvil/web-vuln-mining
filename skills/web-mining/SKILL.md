@@ -1,7 +1,7 @@
 ---
 name: web-mining
 description: Use only when explicitly invoked as $web-mining or when the user says "进入渗透编排模式". Coordinate bounded local-lab, source, or approved-scope Web/API vulnerability mining with existing governance and reproducible evidence.
-version: 4.3.1
+version: 4.4.0
 metadata:
   hermes:
     tags: [web, api, evidence, profiles, governance]
@@ -233,6 +233,28 @@ the files themselves to reports or chat.
 - Server-clamped parameters (pageSize locked by the backend): stop fighting the
   list endpoint; switch to the per-item detail channel to bypass pagination
   limits.
+
+### Campaign Data Layout (per-target folder principle)
+
+All artifacts generated while mining one target — its subdomains included —
+belong to ONE campaign folder per engagement start:
+
+```
+projects/<target-name>-<YYYYMMDD>/
+├── TRIAGE-R<n>.json          # 每轮归档（findings/evidence/blocked）
+├── <target>-<topic>.json     # 原始取证（api/portscan/xss-recon/...）
+├── evidence-*.{pdf,png}      # 下载的文件本体 + evidence-manifest.json 指纹清单
+├── *.nmap / *.js             # 扫描输出、取回的前端资产
+├── REPORT-R<n>.md            # 阶段报告草稿
+└── （reports/ 目录只放终稿 .md，命名 butian-<S编号>-<slug>.md）
+```
+
+- Folder name = 主域名去 TLD + 建立日期（如 `sunoasis-20260825`）；子域
+  （info./sso./ecm.…）产出的数据一律进同一个文件夹，不按子域再拆。
+- `runs/` 是带时间戳的原始流水区；每轮结束把要留存的产物 cp 进 campaign
+  文件夹再 commit——campaign 文件夹是唯一对外可追溯的完整证据集。
+- 下载的敏感文件本体只存 campaign 内并配 MD5 manifest；报告与聊天只引用
+  指纹，不外发文件。
 
 ### Report Writing Rules
 
