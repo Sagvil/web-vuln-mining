@@ -4,8 +4,8 @@
 
 | 项目 | 内容 |
 |---|---|
-| 漏洞名称 | www.sunoasis.com.cn（PbootCMS）API 网关签名认证失效，致个人信息泄露、人才推荐表单可被任意写入、下线内容批量越权读取 |
-| 受影响资产 | `www.sunoasis.com.cn`（特变电工新疆新能源股份有限公司官网，PbootCMS ≥3.2.5，宝塔环境） |
+| 漏洞名称 | www.sunoasis.com.cn（PbootCMS）API 网关签名认证失效，致个人信息泄露、人才推荐表单可被任意写入、下线内容批量越权读取、内部资料文件本体泄露 |
+| 受影响资产 | `www.sunoasis.com.cn`、`info.sunoasis.com.cn`（特变电工新疆新能源股份有限公司，PbootCMS ≥3.2.5 / 自研文档中心，宝塔环境） |
 | 漏洞类型 | CWE-287（认证不当）+ CWE-359（个人隐私信息泄露）+ CWE-284（访问控制缺失，未授权写入）+ CWE-538（文件和目录信息泄露） |
 | 危害等级 | **高危**（PII 泄露 + 未授权写入 + 批量越权读取的组合） |
 | 测试时间 | 2026-08-25 ~ 2026-08-26 |
@@ -70,7 +70,28 @@ appid=x&user_push=SECURITY-TEST-DO-NOT-PROCESS&push_name=安全测试数据请�
 
 **公开性判定**：这些内容已被主动从 sitemap 和前台导航移除（下线处理），但 API 按 id 遍历仍可完整读取正文——属于"已收回公开状态但实际仍暴露"。
 
-### D. 系统情报（辅助攻击价值）
+### D. 内部资料文件本体泄露（13 篇，其中 1 份明确标注"内部资料"）
+
+文档详情接口返回的 `file` 字段指向站内存储直链 `/backend/storage/files/<32位hex>.<ext>`，该存储目录**无任何鉴权校验**。119 篇隐藏文档中有 13 篇携带本地文件指针，文件本体可匿名直接下载：
+
+```http
+POST /backend/v1/detail {"filesId":115}     → file: /backend/storage/files/05986...7c.pdf
+GET  /backend/storage/files/0598648072444a19d881673415860d7c.pdf   → 200 OK, 3,424,952B, %PDF-1.7
+```
+
+敏感性三重判定（字节级 hash 对照公开列表 + 全网搜索 + 文件自身标注）：
+
+| 文件 | 判定 | 证据 |
+|---|---|---|
+| **组串式逆变器地面电站通信调试指导手册 V1.0（3.5 数采）.pdf**（42 页，2023-12 编制） | **内部资料实锤** | 首页明确标注「**内部资料 请勿外传**」；全网搜索零结果；官网公开下载页无此资料；泄露编制/校准人真实姓名（刘海侠、王楠、姬周珂） |
+| TS330KTL-HV-C1 产品多视图、TS75-110KTL-A10、TS45-60KTL-A20 等 10 张 PNG | 未发布/下线产品外观图 | 公开列表无同名条目、hash 不在公开集合 |
+| TSVG画册.pdf（15.7MB）、TSVG单页.pdf | 冗余暴露，无独立价值 | 与公开列表条目**字节级相同**（MD5 一致），属同一文件的重复入口 |
+
+取证指纹：手册 MD5 `42108b1d1cd9175b4997d844e2a2ca63`；TSVG 画册 MD5 `099fdf5c8688bfcc546180984eba72ce`。
+
+其余 106 篇隐藏文档的外链指向 `ecm.tbea.com`（华为文档云），匿名预览被统一认证 SSO 拦截——该部分为元数据与外发链接泄露，全文未验证可读。
+
+### E. 系统情报（辅助攻击价值）
 
 - 服务器绝对路径泄露：`/www/wwwroot/www.sunoasis.com.cn/core/basic/Kernel.php`（宝塔环境指纹）
 - API 全部 19 个有效路由结构、站点配置（cms/site、cms/company、cms/label 全量）
@@ -100,15 +121,17 @@ let siteKeys = { appid: 'admin', timestamp: '1787679036', signature: '8d0b50...'
 1. **个人信息保护合规风险（最高优先）**：员工/求职者真实姓名+手机号+IP 公网匿名可读，违反《个人信息保护法》最小授权原则；
 2. **业务数据完整性**：人才推荐流程可被任意第三方伪造数据污染，已有写入闭环证明；
 3. **信息资产管理失效**：185 篇下线内容（含集团层面合规公告）仍可批量枚举，暴露内容治理缺口；
-4. **横向情报价值**：绝对路径、账号名、API 全貌为后续定向攻击提供基础。
+4. **内部资料外泄**：标注「内部资料 请勿外传」的 42 页调试手册可被任意匿名下载（含内部人员姓名），未发布产品外观图一并暴露；
+5. **横向情报价值**：绝对路径、账号名、API 全貌为后续定向攻击提供基础。
 
 ## 六、修复建议
 
 1. **立即恢复完整签名校验**：补齐 timestamp（±15 秒）+ signature 双层 MD5 校验，或升级官方最新版后重新配置；修改默认 api_appid='admin' 并轮换 api_secret；
 2. **关闭公网表单接口**：cms/form、cms/msg、cms/addmsg、cms/addform 若无移动端需求应在网关层禁用；
 3. **PII 应急处置**：清除或脱敏存量表单手机号；按《个保法》评估是否涉及通知义务；
-4. **清理下线内容**：对 171 篇港股公告类内容设置访问控制或物理删除；
-5. **纵深防御**：/api.php 迁出公网或加 IP 白名单；修正 cms/page 异常回显避免泄露绝对路径。
+4. **内部资料文件立即下架**：`/backend/storage/files/` 目录增加鉴权（或移出 Web 根），对 13 篇本地文件逐一评估去留；「内部资料 请勿外传」级文档严禁挂载于公网可达存储；
+5. **清理下线内容**：对 171 篇港股公告类内容设置访问控制或物理删除；
+6. **纵深防御**：/api.php 迁出公网或加 IP 白名单；修正 cms/page 异常回显避免泄露绝对路径。
 
 ## 七、附录
 
@@ -116,3 +139,6 @@ let siteKeys = { appid: 'admin', timestamp: '1787679036', signature: '8d0b50...'
 - `projects/sunoasis-20260825/pbootcms-api.json`（R4 认证绕过原始取证，commit f398c1a）
 - `TRIAGE-R7.json` / `VERIFICATION-FINAL.json`（源码对照核验，commit fa4069a / 9707c74）
 - `TRIAGE-R11.json` / `IMPACT-CONFIRMED.json`（写入闭环+危害清单，commit f91087f / bf91912）
+- `sunoasis-local-files.json` / `evidence-manifest.json`（文件本体泄露清单+取证指纹，commit cf4aff2）
+- `TRIAGE-R17.json`（敏感性三重判定，commit 814edb2）
+- 取证副本：`evidence-manual-115.pdf`（内部手册，MD5 42108b1d…）/ `evidence-tsvg-catalog.pdf`（公开重复件，仅证冗余入口）

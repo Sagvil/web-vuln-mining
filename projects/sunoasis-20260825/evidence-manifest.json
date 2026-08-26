@@ -1,0 +1,18 @@
+{
+ "evidence_files": [
+  {
+   "name": "evidence-manual-115.pdf",
+   "orig": "组串式逆变器地面电站通信调试指导手册V1.0（3.5数采）.pdf",
+   "size": 3424952,
+   "md5": "42108b1d1cd9175b4997d844e2a2ca63",
+   "marking": "内部资料 请勿外传"
+  },
+  {
+   "name": "evidence-tsvg-catalog.pdf",
+   "orig": "TSVG画册.pdf",
+   "size": 15729399,
+   "md5": "099fdf5c8688bfcc546180984eba72ce",
+   "note": "公开列表同文件（冗余暴露，非独立泄露）"
+  }
+ ]
+}
